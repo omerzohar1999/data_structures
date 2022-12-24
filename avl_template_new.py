@@ -21,8 +21,8 @@ class AVLNode(object):
         self.left = None
         self.right = None
         self.parent = None
-        self.height = -1  # Balance factor # added getBF function below
-        self.size = 0  # changed virtual height, size so it could be maintained easily
+        self.height = -1    # changed virtual height&size so it could be maintained easily
+        self.size = 0
 
         if value is not None:
             self.left = AVLNode(None)
@@ -380,6 +380,9 @@ class AVLTreeList(object):
         count_rotations = 0
         while node is not None:
             count_rotations += self.rotate(node)
+            # need to fix size, height after insertion / deletion even if there is no current rotate:
+            self.fix_size(node)
+            self.fix_height(node)
             if node.parent is None:
                 self.root = node
             node = node.parent
@@ -421,7 +424,7 @@ class AVLTreeList(object):
         if self.size == 0:
             self.root = self.min_node = self.max_node = new_node
             return self.maintain(new_node)
-        if i == 1:
+        if i == 0:
             self.min_node = new_node
         if i == self.size:
             inner_insert(self.max_node, new_node, 'R')
@@ -451,6 +454,11 @@ class AVLTreeList(object):
             self.root = self.min_node = self.max_node = AVLNode(None)
             self.size = 0
             return 0
+        # maintain min_node, max_node
+        if i == 0:
+            self.min_node = self.retrieve_node(1)
+        if i == self.size - 1:
+            self.max_node = self.retrieve_node(self.size - 2)
         # perform a regular deletion
         deleted_node = self.retrieve_node(i)
 
@@ -461,36 +469,24 @@ class AVLTreeList(object):
                 node = successor
                 inner_delete(node)
             else:
-                if node.left.value is None:
-                    if node.parent.left == node:
-                        if node.parent is not None:
+                if node.left.value is None:  # has only right son or no sons at all
+                    node.right.parent = node.parent
+                    if node.parent is not None:
+                        if node.parent.left == node:
                             node.parent.left = node.right
-                        node.right.parent = node.parent
-                    else:
-                        if node.parent is not None:
+                        else:
                             node.parent.right = node.right
-                        node.right.parent = node.parent
-                    self.fix_size(node.parent)
-                    self.fix_height(node.parent)
-                elif node.right.value is None:
-                    if node.parent.left == node:
-                        if node.parent is not None:
+                        self.fix_size(node.parent)
+                        self.fix_height(node.parent)
+                else:   # has only left son
+                    node.left.parent = node.parent
+                    if node.parent is not None:
+                        if node.parent.left == node:
                             node.parent.left = node.left
-                        node.right.parent = node.parent
-                    else:
-                        if node.parent is not None:
+                        else:
                             node.parent.right = node.left
-                        node.right.parent = node.parent
-                else:
-                    if node.parent.left == node:
-                        node.parent.left = AVLNode(None)
-                    else:
-                        node.parent.right = AVLNode(None)
-                    self.fix_size(node.parent)
-                    self.fix_height(node.parent)
-                if node.parent is not None:
-                    self.fix_size(node.parent)
-                    self.fix_height(node.parent)
+                        self.fix_size(node.parent)
+                        self.fix_height(node.parent)
             return node
 
         deleted_node = inner_delete(deleted_node)
@@ -521,8 +517,8 @@ class AVLTreeList(object):
     @returns: a list of strings representing the data structure
     """
 
-    def listToArray(self):
-        return self.root.nodeToArray()
+    def listToArray(self):  # added possibility that list is empty
+        return self.root.nodeToArray() if self.size > 0 else []
 
     """returns the size of the list 
 
