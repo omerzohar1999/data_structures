@@ -451,8 +451,7 @@ class AVLTreeList(object):
     def delete(self, i):
         # take care of empty tree
         if self.size == 1:
-            self.root = self.min_node = self.max_node = AVLNode(None)
-            self.size = 0
+            self = AVLTreeList()
             return 0
         # maintain min_node, max_node
         if i == 0:
