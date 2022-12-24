@@ -4,6 +4,7 @@
 # id2      -
 # name2    -
 
+import random
 
 """A class representing a node in an AVL tree"""
 
@@ -20,12 +21,14 @@ class AVLNode(object):
         self.left = None
         self.right = None
         self.parent = None
-        self.height = -1  # Balance factor
-        self.size = 1
+        self.height = -1  # Balance factor # added getBF function below
+        self.size = 0  # changed virtual height, size so it could be maintained easily
 
         if value is not None:
             self.left = AVLNode(None)
             self.right = AVLNode(None)
+            self.height = 0  # as a leaf
+            self.size = 1
 
     """returns the left child
     @rtype: AVLNode
@@ -79,6 +82,15 @@ class AVLNode(object):
 
     def getSize(self):
         return self.size
+
+    """returns the Balance Factor
+    
+    @rtype: int
+    @returns: the height of left - the height of right
+    """
+
+    def getBF(self):
+        return self.left.getHeight() - self.right.getHeight()
 
     """sets left child
 
@@ -172,6 +184,7 @@ class AVLTreeList(object):
         self.root = None
         self.min_node = None
         self.max_node = None
+
     # add your fields here
 
     """returns whether the list is empty
@@ -222,29 +235,23 @@ class AVLTreeList(object):
     def retrieve(self, i):
         return self.retrieve_node(i).value
 
-    """Does an RL rotation
+    """fixes the size of a node to a correct size after correction
 
         @type node: AVLNode
-        @pre: 0 <= search(node) < self.length()
-        @param node: node in the tree
-        @rtype: int
-        @returns: The number of rotations - 2
+        @pre: node.left.size and node.right.size are correct
         """
 
-    def RL(self, node):
-        return 2
+    def fix_size(self, node):
+        node.size = node.left.size + node.right.size + 1
 
-    """Does an LR rotation
+    """fixes the height of a node to a correct height after correction
 
-            @type node: AVLNode
-            @pre: 0 <= search(node) < self.length()
-            @param node: node in the tree
-            @rtype: int
-            @returns: The number of rotations - 2
-            """
+        @type node: AVLNode
+        @pre: node.left.height and node.right.height are correct
+        """
 
-    def LR(self, node):
-        return 2
+    def fix_height(self, node):
+        node.height = max(node.left.height, node.right.height) + 1
 
     """Does an RR rotation
 
@@ -256,9 +263,31 @@ class AVLTreeList(object):
             """
 
     def RR(self, node):
+        # if node is root - takes care separately
+        if node.parent is None:
+            return self.LL(node.right)
+        # swaps between the nodes, opposite to LL
+        subtree = node.right
+        decreasing_node = node.parent
+        node.setRight(decreasing_node)
+        decreasing_node.setLeft(subtree)
+        subtree.setParent = decreasing_node
+        decreasing_node.setParent(node)
+        # fixes the parental connection to the swapped nodes
+        node.setParent(decreasing_node.parent)
+        if decreasing_node.parent is not None:
+            if decreasing_node.parent.getLeft() == decreasing_node:
+                decreasing_node.parent.setLeft(node)
+            else:
+                decreasing_node.parent.setRight(node)
+        # maintain height and size
+        self.fix_size(decreasing_node)
+        self.fix_size(node)
+        self.fix_height(decreasing_node)
+        self.fix_height(node)
         return 1
 
-    """Does an LL rotation
+    """Does a LL rotation
 
             @type node: AVLNode
             @pre: 0 <= search(node) < self.length()
@@ -268,19 +297,75 @@ class AVLTreeList(object):
             """
 
     def LL(self, node):
-        return 2
+        # if node is root - takes care separately
+        if node.parent is None:
+            return self.RR(node.left)
+        # swaps between the nodes, opposite to RR
+        subtree = node.left
+        decreasing_node = node.parent
+        node.setLeft(decreasing_node)
+        decreasing_node.setRight(subtree)
+        subtree.setParent = decreasing_node
+        decreasing_node.setParent(node)
+        # fixes the parental connection to the swapped nodes
+        node.setParent(decreasing_node.parent)
+        if decreasing_node.parent is not None:
+            if decreasing_node.parent.getLeft() == decreasing_node:
+                decreasing_node.parent.setLeft(node)
+            else:
+                decreasing_node.parent.setRight(node)
+        # maintain height and size
+        self.fix_size(decreasing_node)
+        self.fix_size(node)
+        self.fix_height(decreasing_node)
+        self.fix_height(node)
+        return 1
 
-    """Determines which rotation is needed and does that
+    """Does an RL rotation
+
+            @type node: AVLNode
+            @pre: 0 <= search(node) < self.length()
+            @param node: node in the tree
+            @rtype: int
+            @returns: The number of rotations - 2
+            """
+
+    def RL(self, node):
+        return self.RR(node) + self.LL(node)
+
+    """Does an LR rotation
+
+            @type node: AVLNode
+            @pre: 0 <= search(node) < self.length()
+            @param node: node in the tree
+            @rtype: int
+            @returns: The number of rotations - 2
+            """
+
+    def LR(self, node):
+        return self.LL(node) + self.RR(node)
+
+    """Determines which rotation is needed (if needed) and does that
 
                 @type node: AVLNode
                 @pre: 0 <= search(node) < self.length()
                 @param node: node in the tree
                 @rtype: int
-                @returns: The number of rotations - 2
+                @returns: The number of rotations, 0 if there were not any rotations
                 """
 
     def rotate(self, node):
-        return 1
+        if node.getBF() < -1:
+            if node.right.getBF() >= 1:
+                return self.RL(node.right.left)
+            else:
+                return self.LL(node.right)
+        if node.getBF() > 1:
+            if node.left.getBF() <= -1:
+                return self.LR(node.left.right)
+            else:
+                return self.RR(node.left)
+        return 0
 
     """Maintains AVL rules and node/tree fields.
 
@@ -292,7 +377,14 @@ class AVLTreeList(object):
     """
 
     def maintain(self, node):
-        return 1
+        count_rotations = 0
+        while node is not None:
+            count_rotations += self.rotate(node)
+            if node.parent is None:
+                self.root = node
+            node = node.parent
+        self.size = self.root.size
+        return count_rotations
 
     """inserts val at position i in the list
 
@@ -306,26 +398,43 @@ class AVLTreeList(object):
     """
 
     def insert(self, i, val):
-        # insert new node in place
-        new_i_node = AVLNode(val)
-        current_i_node = self.retrieve_node(i)
-        current_i_node_left = current_i_node.left
-        current_i_node.setLeft(new_i_node)
-        new_i_node.setParent(current_i_node)
-        new_i_node.setLeft(current_i_node_left)
-        # fix size
-        current_i_node.setSize(current_i_node.getSize()+1)
-        new_i_node.setSize(current_i_node_left.getSize()+1)
-        # fix height
-        new_i_node.setHeight(current_i_node_left.getHeight()+1)
-        current_i_node.setHeight(max(current_i_node.right.getHeight(),new_i_node.getHeight()))
-        # fix min, max node
-        if i == 0:
-            self.min_node = new_i_node
+        def inner_insert(parent_node, son, r_l_flag):
+            if r_l_flag == 'R':
+                subtree = parent_node.right
+                parent_node.right = son
+                son.right = subtree
+            if r_l_flag == 'L':
+                subtree = parent_node.left
+                parent_node.left = son
+                son.left = subtree
+            son.parent = parent_node
+            if subtree.isRealNode():
+                subtree.parent = son
+            # fix height, size
+            self.fix_size(son)
+            self.fix_size(parent_node)
+            self.fix_height(son)
+            self.fix_height(parent_node)
+
+        new_node = AVLNode(val)
+        # take care of empty tree
+        if self.size == 0:
+            self.root = self.min_node = self.max_node = new_node
+            return self.maintain(new_node)
+        if i == 1:
+            self.min_node = new_node
         if i == self.size:
-            self.min_node = new_i_node
+            inner_insert(self.max_node, new_node, 'R')
+            self.max_node = new_node
+        else:
+            next_node = self.retrieve_node(i + 1)
+            if next_node.left.value is None:
+                inner_insert(new_node, new_node, 'L')
+            else:
+                prev_node = self.retrieve_node(i - 1)
+                inner_insert(prev_node, new_node, 'R')
         # fix AVL invariant
-        return -1
+        return self.maintain(new_node.parent)
 
     """deletes the i'th item in the list
 
@@ -337,7 +446,56 @@ class AVLTreeList(object):
     """
 
     def delete(self, i):
-        return -1
+        # take care of empty tree
+        if self.size == 1:
+            self.root = self.min_node = self.max_node = AVLNode(None)
+            self.size = 0
+            return 0
+        # perform a regular deletion
+        deleted_node = self.retrieve_node(i)
+
+        def inner_delete(node):
+            if node.left.value is not None and node.right.value is not None:
+                successor = self.retrieve_node(i + 1)
+                node.value = successor.value
+                node = successor
+                inner_delete(node)
+            else:
+                if node.left.value is None:
+                    if node.parent.left == node:
+                        if node.parent is not None:
+                            node.parent.left = node.right
+                        node.right.parent = node.parent
+                    else:
+                        if node.parent is not None:
+                            node.parent.right = node.right
+                        node.right.parent = node.parent
+                    self.fix_size(node.parent)
+                    self.fix_height(node.parent)
+                elif node.right.value is None:
+                    if node.parent.left == node:
+                        if node.parent is not None:
+                            node.parent.left = node.left
+                        node.right.parent = node.parent
+                    else:
+                        if node.parent is not None:
+                            node.parent.right = node.left
+                        node.right.parent = node.parent
+                else:
+                    if node.parent.left == node:
+                        node.parent.left = AVLNode(None)
+                    else:
+                        node.parent.right = AVLNode(None)
+                    self.fix_size(node.parent)
+                    self.fix_height(node.parent)
+                if node.parent is not None:
+                    self.fix_size(node.parent)
+                    self.fix_height(node.parent)
+            return node
+
+        deleted_node = inner_delete(deleted_node)
+        # fix AVL invariant
+        return self.maintain(deleted_node.parent)
 
     """returns the value of the first item in the list
 
