@@ -618,8 +618,6 @@ class AVLTreeList(object):
                 node = node.getParent()
                 node.update()
             self.root = node
-            self.size = self.root.size
-            self.max_node = lst.max_node
         elif lst_height < former_height:
             node = self.getRoot()
             while node.height > lst_height + 1:
@@ -635,15 +633,14 @@ class AVLTreeList(object):
             while node.getParent() is not None:
                 node = node.getParent()
                 node.update()
-            self.size = self.root.size
-            self.max_node = lst.max_node
         else:
             temp_node.setLeft(self.getRoot())
             temp_node.setRight(lst.getRoot())
             temp_node.update()
             self.root = temp_node
-            self.size = self.root.size
 
+        self.size = self.root.size
+        self.max_node = lst.max_node
         self.delete_node(temp_node)
 
         return abs(former_height - lst_height)
