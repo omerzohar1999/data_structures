@@ -167,6 +167,24 @@ class AVLNode(object):
         self_array = [self.value] if self.isRealNode() else []  # added in case node is virtual
         return left_node_array + self_array + right_node_array
 
+    """fixes the size of a node to a correct size after correction
+
+            @type node: AVLNode
+            @pre: node.left.size and node.right.size are correct
+            """
+
+    def fix_size(self):
+        self.size = self.left.size + self.right.size + 1
+
+    """fixes the height of a node to a correct height after correction
+
+        @type node: AVLNode
+        @pre: node.left.height and node.right.height are correct
+        """
+
+    def fix_height(self):
+        self.height = max(self.left.height, self.right.height) + 1
+
 
 """
 A class implementing the ADT list, using an AVL tree.
@@ -235,23 +253,31 @@ class AVLTreeList(object):
     def retrieve(self, i):
         return self.retrieve_node(i).value
 
-    """fixes the size of a node to a correct size after correction
+    """Does maintenance for swapped nodes in LL/RR rotations
 
-        @type node: AVLNode
-        @pre: node.left.size and node.right.size are correct
+        @type i: int
+        @pre: 0 <= i < self.length()
+        @param i: index in the list
+        @rtype: str
+        @returns: the the value of the i'th item in the list
         """
-
-    def fix_size(self, node):
-        node.size = node.left.size + node.right.size + 1
-
-    """fixes the height of a node to a correct height after correction
-
-        @type node: AVLNode
-        @pre: node.left.height and node.right.height are correct
-        """
-
-    def fix_height(self, node):
-        node.height = max(node.left.height, node.right.height) + 1
+    @staticmethod
+    def rotation_fixes(subtree, node, decreasing_node):
+        subtree.setParent(decreasing_node)
+        decreasing_node.setParent(node)
+        # fixes the parental connection to the swapped nodes
+        node.setParent(decreasing_node.parent)
+        if decreasing_node.parent is not None:
+            if decreasing_node.parent.getLeft() == decreasing_node:
+                decreasing_node.parent.setLeft(node)
+            else:
+                decreasing_node.parent.setRight(node)
+        # maintain height and size
+        decreasing_node.fix_size()
+        node.fix_size()
+        decreasing_node.fix_height()
+        node.fix_height()
+        return 1
 
     """Does an RR rotation
 
@@ -271,21 +297,7 @@ class AVLTreeList(object):
         decreasing_node = node.parent
         node.setRight(decreasing_node)
         decreasing_node.setLeft(subtree)
-        subtree.setParent = decreasing_node
-        decreasing_node.setParent(node)
-        # fixes the parental connection to the swapped nodes
-        node.setParent(decreasing_node.parent)
-        if decreasing_node.parent is not None:
-            if decreasing_node.parent.getLeft() == decreasing_node:
-                decreasing_node.parent.setLeft(node)
-            else:
-                decreasing_node.parent.setRight(node)
-        # maintain height and size
-        self.fix_size(decreasing_node)
-        self.fix_size(node)
-        self.fix_height(decreasing_node)
-        self.fix_height(node)
-        return 1
+        return self.rotation_fixes(subtree, node, decreasing_node)
 
     """Does a LL rotation
 
@@ -305,21 +317,7 @@ class AVLTreeList(object):
         decreasing_node = node.parent
         node.setLeft(decreasing_node)
         decreasing_node.setRight(subtree)
-        subtree.setParent = decreasing_node
-        decreasing_node.setParent(node)
-        # fixes the parental connection to the swapped nodes
-        node.setParent(decreasing_node.parent)
-        if decreasing_node.parent is not None:
-            if decreasing_node.parent.getLeft() == decreasing_node:
-                decreasing_node.parent.setLeft(node)
-            else:
-                decreasing_node.parent.setRight(node)
-        # maintain height and size
-        self.fix_size(decreasing_node)
-        self.fix_size(node)
-        self.fix_height(decreasing_node)
-        self.fix_height(node)
-        return 1
+        return self.rotation_fixes(subtree, node, decreasing_node)
 
     """Does an RL rotation
 
@@ -381,8 +379,8 @@ class AVLTreeList(object):
         while node is not None:
             count_rotations += self.rotate(node)
             # need to fix size, height after insertion / deletion even if there is no current rotate:
-            self.fix_size(node)
-            self.fix_height(node)
+            node.fix_size()
+            node.fix_height()
             if node.parent is None:
                 self.root = node
             node = node.parent
@@ -402,6 +400,7 @@ class AVLTreeList(object):
 
     def insert(self, i, val):
         def inner_insert(parent_node, son, r_l_flag):
+            subtree = AVLNode(None)
             if r_l_flag == 'R':
                 subtree = parent_node.right
                 parent_node.right = son
@@ -414,10 +413,10 @@ class AVLTreeList(object):
             if subtree.isRealNode():
                 subtree.parent = son
             # fix height, size
-            self.fix_size(son)
-            self.fix_size(parent_node)
-            self.fix_height(son)
-            self.fix_height(parent_node)
+            son.fix_size()
+            parent_node.fix_size()
+            son.fix_height()
+            parent_node.fix_height()
 
         new_node = AVLNode(val)
         # take care of empty tree
@@ -455,11 +454,11 @@ class AVLTreeList(object):
             return 0
         # maintain min_node, max_node
         if i == 0:
-            self.min_node = self.retrieve_node(1)
+            self.min_node = self.retrieve_node(1)  # O(logn)
         if i == self.size - 1:
-            self.max_node = self.retrieve_node(self.size - 2)
+            self.max_node = self.retrieve_node(self.size - 2)  # O(logn)
         # perform a regular deletion
-        deleted_node = self.retrieve_node(i)
+        deleted_node = self.retrieve_node(i)  # O(logn)
 
         def inner_delete(node):
             if node.left.value is not None and node.right.value is not None:
@@ -475,8 +474,8 @@ class AVLTreeList(object):
                             node.parent.left = node.right
                         else:
                             node.parent.right = node.right
-                        self.fix_size(node.parent)
-                        self.fix_height(node.parent)
+                        node.parent.fix_size()
+                        node.parent.fix_height()
                 else:   # has only left son
                     node.left.parent = node.parent
                     if node.parent is not None:
@@ -484,8 +483,8 @@ class AVLTreeList(object):
                             node.parent.left = node.left
                         else:
                             node.parent.right = node.left
-                        self.fix_size(node.parent)
-                        self.fix_height(node.parent)
+                        node.parent.fix_size()
+                        node.parent.fix_height()
             return node
 
         deleted_node = inner_delete(deleted_node)
@@ -518,15 +517,6 @@ class AVLTreeList(object):
 
     def listToArray(self):  # added possibility that list is empty so root is None
         return self.root.nodeToArray() if self.root is not None else []
-
-    """returns an AVLTreeList representing an array given as a python list
-
-    @rtype: AVLTreeList
-    @returns: an AVLTreeList of strings representing the given list
-    """
-
-    def arrayToList(self, arr):
-        return None # Omer
 
     """returns the size of the list 
 
@@ -566,7 +556,7 @@ class AVLTreeList(object):
 
         arr = self.listToArray()
         sorted_arr = merge_sort(arr)
-        return self.arrayToList(sorted_arr)
+        return arrayToTree(sorted_arr)
 
     """permute the info values of the list 
 
@@ -586,7 +576,7 @@ class AVLTreeList(object):
 
         arr = self.listToArray()
         shuffle(arr)
-        return self.arrayToList(arr)
+        return arrayToTree(arr)
 
     """concatenates lst to self
 
@@ -597,7 +587,7 @@ class AVLTreeList(object):
     """
 
     def concat(self, lst):
-        return None
+        return abs(self.root.height - lst.root.height)
 
     """searches for a *value* in the list
 
@@ -622,3 +612,27 @@ class AVLTreeList(object):
 
     def getRoot(self):
         return self.root
+
+
+"""returns an AVLTreeList representing an array given as a python list
+
+@rtype: AVLTreeList
+@returns: an AVLTreeList of strings representing the given list
+"""
+
+
+def arrayToTree(arr):
+    mid_loc = len(arr) // 2
+    mid_node = AVLNode(arr[mid_loc])
+    right_tree = arrayToTree(arr[mid_loc + 1:]) if len(arr) - mid_loc - 1 > 0 else AVLTreeList()
+    left_tree = arrayToTree(arr[:mid_loc]) if mid_loc > 0 else AVLTreeList()
+    mid_node.left = left_tree.root
+    mid_node.right = right_tree.root
+    mid_node.size = mid_node.left.size + mid_node.right.size + 1
+    mid_node.height = max(mid_node.left.height, mid_node.right.height) + 1
+    tree = AVLTreeList()
+    tree.root = mid_node
+    tree.size = mid_node.size
+    tree.min_node = tree.retrieve_node(0)
+    tree.max_node = tree.retrieve_node(tree.size - 1)
+    return tree
