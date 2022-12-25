@@ -153,7 +153,7 @@ class AVLNode(object):
     """
 
     def isRealNode(self):
-        return self.value is None
+        return self.value is not None   # added not - not None --> real node
 
     """returns an array containing all 
 
@@ -164,7 +164,7 @@ class AVLNode(object):
     def nodeToArray(self):
         left_node_array = self.getLeft().nodeToArray() if self.getLeft().isRealNode() else []
         right_node_array = self.getRight().nodeToArray() if self.getRight().isRealNode() else []
-        self_array = [self.value]
+        self_array = [self.value] if self.isRealNode() else []  # added in case node is virtual
         return left_node_array + self_array + right_node_array
 
 
@@ -516,8 +516,17 @@ class AVLTreeList(object):
     @returns: a list of strings representing the data structure
     """
 
-    def listToArray(self):  # added possibility that list is empty
-        return self.root.nodeToArray() if self.size > 0 else []
+    def listToArray(self):  # added possibility that list is empty so root is None
+        return self.root.nodeToArray() if self.root is not None else []
+
+    """returns an AVLTreeList representing an array given as a python list
+
+    @rtype: AVLTreeList
+    @returns: an AVLTreeList of strings representing the given list
+    """
+
+    def arrayToList(self, arr):
+        return None # Omer
 
     """returns the size of the list 
 
@@ -535,16 +544,49 @@ class AVLTreeList(object):
     """
 
     def sort(self):
-        return None
+        def merge_sort(array):
+            def merge(arr1, arr2):
+                merged_arr = []
+                i = j = 0
+                while i < len(arr1) or j < len(arr2):
+                    if i >= len(arr1) or (j < len(arr2) and arr2[j] < arr1[i]):
+                        merged_arr.append(arr2[j])
+                        j += 1
+                    else:
+                        merged_arr.append(arr1[i])
+                        i += 1
+                return merged_arr
+
+            if len(array) > 1:
+                mid = len(array) // 2
+                left = array[:mid]
+                right = array[mid:]
+                return merge(merge_sort(left), merge_sort(right))
+            return array
+
+        arr = self.listToArray()
+        sorted_arr = merge_sort(arr)
+        return self.arrayToList(sorted_arr)
 
     """permute the info values of the list 
 
     @rtype: list
-    @returns: an AVLTreeList where the values are permuted randomly by the info of the original list. ##Use Randomness
+    @returns: an AVLTreeList where the values are permuted randomly by the info of the original list.
     """
 
     def permutation(self):
-        return None
+        def shuffle(array):
+            end = len(array) - 1
+            while end > 0:
+                i = random.randint(0, end)
+                value = array[i]
+                array[i] = array[end]
+                array[end] = value
+                end -= 1
+
+        arr = self.listToArray()
+        shuffle(arr)
+        return self.arrayToList(arr)
 
     """concatenates lst to self
 
@@ -567,7 +609,7 @@ class AVLTreeList(object):
 
     def search(self, val):
         lst = self.listToArray()
-        for i in range(len(lst)):
+        for i in range(len(lst)):   # the total complexity is already O(n)
             if lst[i] == val:
                 return i
         return -1
