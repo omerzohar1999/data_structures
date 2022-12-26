@@ -460,11 +460,18 @@ class AVLTreeList(object):
 
     # OMER - IT DOES NOT MAINTAIN AVL INVARIANT, NOTICE WHILE USING
     def delete_node(self, node):
+        # maintain min_node, max_node
+        if node == self.min_node:
+            self.min_node = self.min_node.right if self.min_node.right.isRealNode() else self.min_node.parent  # changed
+        if node == self.max_node:
+            self.max_node = self.retrieve_node(self.size - 2)
+        # takes care of node with 2 children
         if node.left.value is not None and node.right.value is not None:
             successor = node.successor()
             node.value = successor.value
             node = successor
             return self.delete_node(node)   # as a return
+        # actually delete
         node.right.parent = node.parent
         node.left.parent = node.parent
         if node.left.value is None:  # has only right son or no sons at all
@@ -504,14 +511,8 @@ class AVLTreeList(object):
         # perform a regular deletion
         deleted_node = self.retrieve_node(i)
         near_deleted_node = self.delete_node(deleted_node)
-        # fix AVL invariant
-        count_rotations = self.maintain(near_deleted_node)
-        # maintain min_node, max_node
-        if i == 0:
-            self.min_node = self.min_node.right if self.min_node.right.isRealNode() else self.min_node.parent   # changed
-        if i >= self.size - 1:
-            self.max_node = self.retrieve_node(self.size - 1)
-        return count_rotations
+        # fix AVL invariant & AVLTree fields - moved min-max maintaining into maintain
+        return self.maintain(near_deleted_node)
 
     """returns the value of the first item in the list
 

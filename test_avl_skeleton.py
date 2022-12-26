@@ -190,10 +190,10 @@ class testAVLList(unittest.TestCase):
                 self.check_last(T5, L5)
 
     ### TESTING DELETION ### (assuming insertion works perfectly)#
-    def test_deleting_not_existing(self):
-        self.assertEqual(self.emptyList.delete(0), -1)
-        self.assertEqual(self.twentyTree.delete(-1), -1)
-        self.assertEqual(self.twentyTree.delete(30), -1)
+    # def test_deleting_not_existing(self):
+    #     self.assertEqual(self.emptyList.delete(0), -1)
+    #     self.assertEqual(self.twentyTree.delete(-1), -1)
+    #     self.assertEqual(self.twentyTree.delete(30), -1)
 
     def test_delete_list_with_only_one_element(self):
         T = AVLTreeList()
