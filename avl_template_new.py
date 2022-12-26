@@ -234,16 +234,15 @@ class AVLTreeList(object):
     """
 
     def retrieve_node(self, i):
+        if i == 0:
+            return self.min_node
+        if i == self.size - 1:
+            return self.max_node
         pointer_node = self.min_node
         new_index = i
-        while pointer_node.size < i:
-            if pointer_node.size == i - 1:
-                return pointer_node.parent
-            elif pointer_node.parent.size > i:
-                pointer_node = pointer_node.parent
-            else:
-                pointer_node = pointer_node.parent
-        while new_index != pointer_node.getLeft().size + 1:
+        while pointer_node.size <= i:
+            pointer_node = pointer_node.parent
+        while new_index != pointer_node.getLeft().size:
             if pointer_node.getLeft().size < new_index:
                 new_index -= (pointer_node.getLeft().size + 1)
                 pointer_node = pointer_node.getRight()
@@ -782,10 +781,12 @@ def arrayToTreeRec(arr):
 
 def test():
     tree = AVLTreeList()
-    tree.insert(0, "a")
-    tree.insert(1, "b")
-    tree.insert(2, "c")
+    for i in range(6):
+        tree.insert(i, i)
     tree.printt()
+    for i in range(6):
+        print(i, tree.retrieve(i))
+
 
 if __name__ == '__main__':
     test()
