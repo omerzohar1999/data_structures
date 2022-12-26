@@ -271,17 +271,19 @@ class AVLTreeList(object):
         @rtype: str
         @returns: the the value of the i'th item in the list
         """
-    @staticmethod
-    def rotation_fixes(subtree, node, decreasing_node):
+
+    def rotation_fixes(self, subtree, node, decreasing_node):
         subtree.setParent(decreasing_node)
-        decreasing_node.setParent(node)
-        # fixes the parental connection to the swapped nodes
-        node.setParent(decreasing_node.parent)
         if decreasing_node.parent is not None:
             if decreasing_node.parent.getLeft() == decreasing_node:
                 decreasing_node.parent.setLeft(node)
             else:
                 decreasing_node.parent.setRight(node)
+        node.setParent(decreasing_node.parent)
+        # fixes the parental connection to the swapped nodes
+        decreasing_node.setParent(node)
+        if self.root == decreasing_node:
+            self.root = node
         # maintain height and size
         decreasing_node.update()
         node.update()
@@ -407,6 +409,7 @@ class AVLTreeList(object):
 
     def insert(self, i, val):
         def inner_insert(parent_node, son, r_l_flag):
+            self.printt()
             subtree = AVLNode(None)
             if r_l_flag == 'R':
                 subtree = parent_node.right
@@ -429,8 +432,9 @@ class AVLTreeList(object):
             self.root = self.min_node = self.max_node = new_node
             return self.maintain(new_node)
         if i == 0:
+            inner_insert(self.min_node, new_node, 'L')
             self.min_node = new_node
-        if i == self.size:
+        elif i == self.size:
             inner_insert(self.max_node, new_node, 'R')
             self.max_node = new_node
         else:
@@ -454,7 +458,7 @@ class AVLTreeList(object):
 
     def delete_node(self, node):
         if node.left.value is not None and node.right.value is not None:
-            successor = node.successor
+            successor = node.successor()
             node.value = successor.value
             node = successor
             self.delete_node(node)
@@ -570,6 +574,12 @@ class AVLTreeList(object):
         sorted_arr = merge_sort(arr)
         return arrayToTree(sorted_arr)
 
+    def append(self, val):
+        self.insert(self.length(), val)
+
+    def getTreeHeight(self):
+        return self.root.height
+
     """permute the info values of the list 
 
     @rtype: list
@@ -669,6 +679,72 @@ class AVLTreeList(object):
     def getRoot(self):
         return self.root
 
+    def printt(self):
+        out = ""
+        for row in self.printree(self.root):  # need printree.py file
+            out = out + row + "\n"
+        print(out)
+
+    def printree(self, t, bykey=True):
+        # for row in trepr(t, bykey):
+        #        print(row)
+        return self.trepr(t, False)
+
+    def trepr(self, t, bykey=False):
+        if t == None:
+            return ["#"]
+
+        thistr = str(t.key) if bykey else str(t.getValue())
+
+        return self.conc(self.trepr(t.left, bykey), thistr, self.trepr(t.right, bykey))
+
+    def conc(self, left, root, right):
+
+        lwid = len(left[-1])
+        rwid = len(right[-1])
+        rootwid = len(root)
+
+        result = [(lwid + 1) * " " + root + (rwid + 1) * " "]
+
+        ls = self.leftspace(left[0])
+        rs = self.rightspace(right[0])
+        result.append(ls * " " + (lwid - ls) * "_" + "/" + rootwid *
+                      " " + "\\" + rs * "_" + (rwid - rs) * " ")
+
+        for i in range(max(len(left), len(right))):
+            row = ""
+            if i < len(left):
+                row += left[i]
+            else:
+                row += lwid * " "
+
+            row += (rootwid + 2) * " "
+
+            if i < len(right):
+                row += right[i]
+            else:
+                row += rwid * " "
+
+            result.append(row)
+
+        return result
+
+    def leftspace(self, row):
+        # row is the first row of a left node
+        # returns the index of where the second whitespace starts
+        i = len(row) - 1
+        while row[i] == " ":
+            i -= 1
+        return i + 1
+
+    def rightspace(self, row):
+        # row is the first row of a right node
+        # returns the index of where the first whitespace ends
+        i = 0
+        while row[i] == " ":
+            i += 1
+        return i
+
 
 """returns an AVLTreeList representing an array given as a python list
 
@@ -702,3 +778,14 @@ def arrayToTreeRec(arr):
     mid_node.left = left_node
     mid_node.update()
     return mid_node
+
+
+def test():
+    tree = AVLTreeList()
+    tree.insert(0, "a")
+    tree.insert(1, "b")
+    tree.insert(2, "c")
+    tree.printt()
+
+if __name__ == '__main__':
+    test()
