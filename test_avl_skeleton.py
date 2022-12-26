@@ -246,8 +246,8 @@ class testAVLList(unittest.TestCase):
                 self.check_first(T, L)
                 self.check_last(T, L)
                 T.delete(0)
+                T.printt()
                 L.pop(0)
-
         self.assertEqual(len(L), 0)
 
     def test_delete_from_start_big(self):
@@ -1090,7 +1090,7 @@ class testAVLList(unittest.TestCase):
         LR2.append(i+10)
 
     # def test_compare_treelist_and_list(self):
-        # self.assertEqual (self.TR1.listToArray(),self.LR1)
+    #     self.assertEqual(self.TR1.listToArray(),self.LR1)
 
     TR1.concat(TR2)
     LR3 = LR1 + LR2

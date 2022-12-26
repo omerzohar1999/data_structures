@@ -26,7 +26,9 @@ class AVLNode(object):
 
         if value is not None:
             self.left = AVLNode(None)
+            self.left.parent = self     # added
             self.right = AVLNode(None)
+            self.right.parent = self    # added
             self.height = 0  # as a leaf
             self.size = 1
 
@@ -234,13 +236,14 @@ class AVLTreeList(object):
     """
 
     def retrieve_node(self, i):
-        if i < 0 or i >= self.root.size:
+        if self.root is None or i < 0 or i >= self.root.size:   # added possibility that the tree is empty
             print("CANNOT SEARCH FOR", i, "IN THE TREE")
+            print(self.size)
             return None
         if i == 0:
             return self.min_node
-        if i == self.size - 1:
-            return self.max_node
+        # if i == self.size - 1:    # using retrieve_node to fix max_node; screws it up
+        #     return self.max_node
         pointer_node = self.min_node
         new_index = i
         while pointer_node.size <= i:
@@ -262,8 +265,9 @@ class AVLTreeList(object):
     @returns: the the value of the i'th item in the list
     """
 
-    def retrieve(self, i):
-        return self.retrieve_node(i).value
+    def retrieve(self, i):  # added possibility the index was invalid
+        node = self.retrieve_node(i)
+        return node.value if node is not None else None
 
     """Does maintenance for swapped nodes in LL/RR rotations
 
@@ -411,7 +415,6 @@ class AVLTreeList(object):
 
     def insert(self, i, val):
         def inner_insert(parent_node, son, r_l_flag):
-            self.printt()
             subtree = AVLNode(None)
             if r_l_flag == 'R':
                 subtree = parent_node.right
@@ -422,8 +425,7 @@ class AVLTreeList(object):
                 parent_node.left = son
                 son.left = subtree
             son.parent = parent_node
-            if subtree.isRealNode():
-                subtree.parent = son
+            subtree.parent = son    # happens even is subtree is not real
             # fix height, size
             son.update()
             parent_node.update()
@@ -440,48 +442,50 @@ class AVLTreeList(object):
             inner_insert(self.max_node, new_node, 'R')
             self.max_node = new_node
         else:
-            next_node = self.retrieve_node(i + 1)
+            next_node = self.retrieve_node(i)   # fixed to i instead of i+1
             if next_node.left.value is None:
-                inner_insert(new_node, new_node, 'L')
+                inner_insert(next_node, new_node, 'L')  # fixed to next node instead of new node
             else:
                 prev_node = self.retrieve_node(i - 1)
                 inner_insert(prev_node, new_node, 'R')
         # fix AVL invariant
         return self.maintain(new_node.parent)
 
-    """deletes the i'th item in the list
+    """deletes the given node from the AVLTree. 
 
-    @type i: int
-    @pre: 0 <= i < self.length()
-    @param i: The intended index in the list to be deleted
-    @rtype: int
-    @returns: the number of rebalancing operation due to AVL rebalancing
+    @param node: The intended node in the AVLTree to be deleted
+    @rtype: AVLNode
+    @returns: the closest node to the deleted node: if deleted node had a son -> son, if deleted node was a leaf -> parent 
     """
 
+    # OMER - IT DOES NOT MAINTAIN AVL INVARIANT, NOTICE WHILE USING
     def delete_node(self, node):
         if node.left.value is not None and node.right.value is not None:
             successor = node.successor()
             node.value = successor.value
             node = successor
-            self.delete_node(node)
-        else:
-            if node.left.value is None:  # has only right son or no sons at all
-                node.right.parent = node.parent
-                if node.parent is not None:
-                    if node.parent.left == node:
-                        node.parent.left = node.right
-                    else:
-                        node.parent.right = node.right
-                    node.parent.update()
-            else:  # has only left son
-                node.left.parent = node.parent
-                if node.parent is not None:
-                    if node.parent.left == node:
-                        node.parent.left = node.left
-                    else:
-                        node.parent.right = node.left
-                    node.parent.update()
-        return node
+            return self.delete_node(node)   # as a return
+        node.right.parent = node.parent
+        node.left.parent = node.parent
+        if node.left.value is None:  # has only right son or no sons at all
+            if node.parent is not None:
+                if node.parent.left == node:
+                    node.parent.left = node.right
+                else:
+                    node.parent.right = node.right
+                node.parent.update()
+            if node.right.value is not None:    # deleted node has a right child
+                return node.right
+            else:   # deleted node had no children
+                return node.parent
+        else:  # has only left son
+            if node.parent is not None:
+                if node.parent.left == node:
+                    node.parent.left = node.left
+                else:
+                    node.parent.right = node.left
+                node.parent.update()
+            return node.left
 
     """deletes the i'th item in the list
 
@@ -497,17 +501,17 @@ class AVLTreeList(object):
         if self.size == 1:
             self.__init__()
             return 0
+        # perform a regular deletion
+        deleted_node = self.retrieve_node(i)
+        near_deleted_node = self.delete_node(deleted_node)
+        # fix AVL invariant
+        count_rotations = self.maintain(near_deleted_node)
         # maintain min_node, max_node
         if i == 0:
-            self.min_node = self.retrieve_node(1)  # O(logn)
-        if i == self.size - 1:
-            self.max_node = self.retrieve_node(self.size - 2)  # O(logn)
-        # perform a regular deletion
-        deleted_node = self.retrieve_node(i)  # O(logn)
-
-        deleted_node = self.delete_node(deleted_node)
-        # fix AVL invariant
-        return self.maintain(deleted_node.parent)
+            self.min_node = self.min_node.right if self.min_node.right.isRealNode() else self.min_node.parent   # changed
+        if i >= self.size - 1:
+            self.max_node = self.retrieve_node(self.size - 1)
+        return count_rotations
 
     """returns the value of the first item in the list
 
