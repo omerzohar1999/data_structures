@@ -234,6 +234,9 @@ class AVLTreeList(object):
     """
 
     def retrieve_node(self, i):
+        if i < 0 or i >= self.root.size:
+            print("CANNOT SEARCH FOR", i, "IN THE TREE")
+            return None
         if i == 0:
             return self.min_node
         if i == self.size - 1:
@@ -756,8 +759,14 @@ def arrayToTree(arr):
     tree = AVLTreeList()
     tree.root = arrayToTreeRec(arr)
     tree.size = tree.root.size
-    tree.min_node = tree.retrieve_node(0)  # O(logn)
-    tree.max_node = tree.retrieve_node(tree.size - 1)  # O(logn)
+    pointer = tree.root
+    while pointer.left.isRealNode():
+        pointer = pointer.left
+    tree.min_node = pointer
+    pointer = tree.root
+    while pointer.right.isRealNode():
+        pointer = pointer.right
+    tree.max_node = pointer
     return tree
 
 
@@ -771,21 +780,22 @@ def arrayToTree(arr):
 def arrayToTreeRec(arr):
     mid_loc = len(arr) // 2
     mid_node = AVLNode(arr[mid_loc])
-    right_node = arrayToTree(arr[mid_loc + 1:]) if len(arr) - mid_loc - 1 > 0 else AVLNode(None)
-    left_node = arrayToTree(arr[:mid_loc]) if mid_loc > 0 else AVLNode(None)
+    right_node = arrayToTreeRec(arr[mid_loc + 1:]) if len(arr) - mid_loc - 1 > 0 else AVLNode(None)
+    left_node = arrayToTreeRec(arr[:mid_loc]) if mid_loc > 0 else AVLNode(None)
     mid_node.right = right_node
+    right_node.parent = mid_node
     mid_node.left = left_node
+    left_node.parent = mid_node
     mid_node.update()
     return mid_node
 
 
 def test():
-    tree = AVLTreeList()
-    for i in range(6):
-        tree.insert(i, i)
+    tree = arrayToTree([0, 1, 2, 3, 4, 5])
     tree.printt()
+    tree.getRoot()
     for i in range(6):
-        print(i, tree.retrieve(i))
+        print(tree.retrieve(i))
 
 
 if __name__ == '__main__':
