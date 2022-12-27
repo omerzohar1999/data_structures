@@ -434,7 +434,8 @@ class AVLTreeList(object):
         # take care of empty tree
         if self.size == 0:
             self.root = self.min_node = self.max_node = new_node
-            return self.maintain(new_node)
+            to_return = self.maintain(new_node)
+            return to_return if to_return is not None else 0
         if i == 0:
             inner_insert(self.min_node, new_node, 'L')
             self.min_node = new_node
@@ -449,7 +450,8 @@ class AVLTreeList(object):
                 prev_node = self.retrieve_node(i - 1)
                 inner_insert(prev_node, new_node, 'R')
         # fix AVL invariant
-        return self.maintain(new_node.parent)
+        to_return = self.maintain(new_node.parent)
+        return to_return if to_return is not None else 0
 
     """deletes the given node from the AVLTree. 
 
@@ -582,7 +584,7 @@ class AVLTreeList(object):
         return arrayToTree(sorted_arr)
 
     def append(self, val):
-        self.insert(self.length(), val)
+        return self.insert(self.length(), val)
 
     def getTreeHeight(self):
         return self.root.height
@@ -616,10 +618,20 @@ class AVLTreeList(object):
     """
 
     def concat(self, lst):
-        former_height = self.getRoot().height
-        lst_height = lst.getRoot().height
+        former_height = self.getRoot().height if self.getRoot() is not None else -1
+        former_size = self.getRoot().size if self.getRoot() is not None else 0
+        lst_height = lst.getRoot().height if lst.getRoot() is not None else -1
+        lst_size = lst.getRoot().size  if lst.getRoot() is not None else 0
+        if lst_size == 0:
+            return max(former_height, 0)
+        if former_size == 0:
+            self.root = lst.root
+            self.size = lst.size
+            self.min_node = lst.min_node
+            self.max_node = lst.max_node
+            return max(lst_height, 0)
         temp_node = AVLNode("0")
-        if lst_height > former_height:
+        if lst_height > former_height - 1:
             node = lst.getRoot()
             while node.height > former_height + 1:
                 node = node.getLeft()
@@ -635,12 +647,12 @@ class AVLTreeList(object):
                 node = node.getParent()
                 node.update()
             self.root = node
-        elif lst_height < former_height:
+        elif lst_height < former_height - 1:
             node = self.getRoot()
             while node.height > lst_height + 1:
                 node = node.getRight()
             temp_node.setParent(node)
-            temp_node.setRight(self.root)
+            temp_node.setRight(node.getLeft())
             temp_node.getRight().setParent(temp_node)
             temp_node.setLeft(node.getLeft())
             temp_node.getLeft().setParent(temp_node)
@@ -652,15 +664,17 @@ class AVLTreeList(object):
                 node.update()
         else:
             temp_node.setLeft(self.getRoot())
+            temp_node.getLeft().setParent(temp_node)
             temp_node.setRight(lst.getRoot())
+            temp_node.getRight().setParent(temp_node)
             temp_node.update()
             self.root = temp_node
 
         self.size = self.root.size
         self.max_node = lst.max_node
-        self.delete_node(temp_node)
+        self.delete(former_size)
 
-        return abs(former_height - lst_height)
+        return abs(max(former_height, 0) - max(lst_height, 0))
 
     """searches for a *value* in the list
 
@@ -796,11 +810,20 @@ def arrayToTreeRec(arr):
 
 
 def test():
-    tree = arrayToTree([0, 1, 2, 3, 4, 5])
-    tree.printt()
-    tree.getRoot()
-    for i in range(6):
-        print(tree.retrieve(i))
+    T1 = AVLTreeList()
+    T2 = AVLTreeList()
+    L1 = list()
+    L2 = list()
+    for i in range(10):
+        T1.append(i)
+        L1.append(i)
+    for i in range(5):
+        T2.append(i)
+        L2.append(i)
+    T1.concat(T2)
+    L3 = L1 + L2
+    print(T1.listToArray())
+    print(L3)
 
 
 if __name__ == '__main__':
