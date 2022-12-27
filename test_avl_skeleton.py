@@ -200,8 +200,8 @@ class testAVLList(unittest.TestCase):
         T.insert(0, 1)
         T.delete(0)
         self.assertIsNone(T.getRoot())
-        self.assertIsNone(T.min_node)
-        self.assertIsNone(T.max_node)
+        self.assertIsNone(T.first_node)
+        self.assertIsNone(T.last_node)
         self.assertIsNone(T.first())
         self.assertIsNone(T.last())
 
