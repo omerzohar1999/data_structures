@@ -1,4 +1,4 @@
-from avl_template_new import AVLTreeList
+from AVLTreeList import AVLTreeList
 import unittest
 
 
@@ -31,17 +31,17 @@ class testAVLList(unittest.TestCase):
     def in_order(self, tree, node, func):
         if node is not None:
             if node.isRealNode():
-                self.in_order(tree, node.getLeft(), func)
+                self.in_order(tree, node.getLeftNode(), func)
                 func(node, tree)
-                self.in_order(tree, node.getRight(), func)
+                self.in_order(tree, node.getRightNode(), func)
 
     def compare_with_list_by_in_order(self, tree, lst):
         def rec(node, cnt, lst):
             if node.isRealNode():
-                rec(node.getLeft(), cnt, lst)
+                rec(node.getLeftNode(), cnt, lst)
                 self.assertEqual(node.getValue(), lst[cnt[0]])
                 cnt[0] += 1
-                rec(node.getRight(), cnt, lst)
+                rec(node.getRightNode(), cnt, lst)
 
         cnt = [0]
         if not tree.empty():
@@ -434,14 +434,14 @@ class testAVLList(unittest.TestCase):
     ### TESTING FAMILTY ### (testing that node == node.getchild.gerparent)#
 
     def check_family(self, node, tree):
-        self.assertEqual(node, node.getLeft().getParent())
-        self.assertEqual(node, node.getRight().getParent())
+        self.assertEqual(node, node.getLeftNode().getParentNode())
+        self.assertEqual(node, node.getRightNode().getParentNode())
 
     def test_family_basic(self):
         self.in_order(self.twentyTree, self.twentyTree.getRoot(),
                       self.check_family)
 
-        self.assertIsNone(self.twentyTree.getRoot().getParent())
+        self.assertIsNone(self.twentyTree.getRoot().getParentNode())
 
     def test_family_after_insertion_at_start(self):
         T2 = AVLTreeList()
@@ -556,8 +556,8 @@ class testAVLList(unittest.TestCase):
     ###TESTING SIZE###
 
     def check_size(self, node, tree):
-        self.assertEqual(node.getSize(), node.getLeft(
-        ).getSize() + node.getRight().getSize() + 1)
+        self.assertEqual(node.getSize(), node.getLeftNode(
+        ).getSize() + node.getRightNode().getSize() + 1)
 
     def test_size_after_insertion_at_start(self):
         T2 = AVLTreeList()
@@ -672,8 +672,8 @@ class testAVLList(unittest.TestCase):
         ###TESTING HEIGHT###
 
     def check_height(self, node, tree):
-        self.assertEqual(node.getHeight(), max(node.getLeft(
-        ).getHeight(), node.getRight().getHeight()) + 1)
+        self.assertEqual(node.getHeight(), max(node.getLeftNode(
+        ).getHeight(), node.getRightNode().getHeight()) + 1)
 
     def test_height_after_insertion_at_start(self):
         T2 = AVLTreeList()
@@ -788,8 +788,8 @@ class testAVLList(unittest.TestCase):
     ### TESTING BALACNE FACTOR ###
 
     def check_BF(self, node, tree):
-        self.assertTrue(abs(node.getLeft().getHeight() -
-                            node.getRight().getHeight()) < 2)
+        self.assertTrue(abs(node.getLeftNode().getHeight() -
+                            node.getRightNode().getHeight()) < 2)
 
     def test_BF_after_insertion_at_start(self):
         T2 = AVLTreeList()

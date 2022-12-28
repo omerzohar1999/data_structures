@@ -34,13 +34,39 @@ class AVLNode(object):
             self.height = 0  # as a leaf
             self.size = 1
 
-    """returns the left child
+    """returns the left child node
     @rtype: AVLNode
-    @returns: the left child of self, None if there is no left child
+    @returns: the left child of self
     """
 
-    def getLeft(self):
+    def getLeftNode(self):
         return self.left
+
+    """returns the right child
+
+    @rtype: AVLNode
+    @returns: the right child of self
+    """
+
+    def getRightNode(self):
+        return self.right
+
+    """returns the parent 
+
+    @rtype: AVLNode
+    @returns: the parent of self
+    """
+
+    def getParentNode(self):
+        return self.parent
+
+    """returns the left child
+        @rtype: AVLNode
+        @returns: the left child of self, None if there is no left child
+        """
+
+    def getLeft(self):
+        return self.left if self.left is not None and self.left.isRealNode() else None
 
     """returns the right child
 
@@ -49,7 +75,7 @@ class AVLNode(object):
     """
 
     def getRight(self):
-        return self.right
+        return self.right if self.right is not None and self.right.isRealNode() else None
 
     """returns the parent 
 
@@ -58,7 +84,8 @@ class AVLNode(object):
     """
 
     def getParent(self):
-        return self.parent
+        return self.parent if self.parent is not None and self.parent.isRealNode() else None
+
 
     """return the value
 
@@ -170,8 +197,8 @@ class AVLNode(object):
     """
 
     def nodeToArray(self):
-        left_node_array = self.getLeft().nodeToArray() if self.getLeft().isRealNode() else []
-        right_node_array = self.getRight().nodeToArray() if self.getRight().isRealNode() else []
+        left_node_array = self.getLeftNode().nodeToArray() if self.getLeftNode().isRealNode() else []
+        right_node_array = self.getRightNode().nodeToArray() if self.getRightNode().isRealNode() else []
         self_array = [self.value] if self.isRealNode() else []  # added in case node is virtual
         return left_node_array + self_array + right_node_array
 
@@ -191,15 +218,15 @@ class AVLNode(object):
     """
 
     def successor(self):
-        if self.getRight().isRealNode():
-            to_return = self.getRight()
-            while to_return.getLeft().isRealNode():
-                to_return = to_return.getLeft()
+        if self.getRightNode().isRealNode():
+            to_return = self.getRightNode()
+            while to_return.getLeftNode().isRealNode():
+                to_return = to_return.getLeftNode()
         else:
             tmp = self
-            while tmp.getParent() is not None and tmp.getParent().getRight() == tmp:
-                tmp = tmp.getParent()
-            to_return = tmp.getParent()
+            while tmp.getParentNode() is not None and tmp.getParentNode().getRightNode() == tmp:
+                tmp = tmp.getParentNode()
+            to_return = tmp.getParentNode()
         return to_return
 
 
@@ -253,12 +280,12 @@ class AVLTreeList(object):
         new_index = i
         while pointer_node.size <= i:
             pointer_node = pointer_node.parent
-        while new_index != pointer_node.getLeft().size:
-            if pointer_node.getLeft().size < new_index:
-                new_index -= (pointer_node.getLeft().size + 1)
-                pointer_node = pointer_node.getRight()
+        while new_index != pointer_node.getLeftNode().size:
+            if pointer_node.getLeftNode().size < new_index:
+                new_index -= (pointer_node.getLeftNode().size + 1)
+                pointer_node = pointer_node.getRightNode()
             else:
-                pointer_node = pointer_node.getLeft()
+                pointer_node = pointer_node.getLeftNode()
         return pointer_node
 
     """retrieves the value of the i'th item in the list
@@ -286,7 +313,7 @@ class AVLTreeList(object):
     def rotation_fixes(self, subtree, node, decreasing_node):
         subtree.setParent(decreasing_node)
         if decreasing_node.parent is not None:
-            if decreasing_node.parent.getLeft() == decreasing_node:
+            if decreasing_node.parent.getLeftNode() == decreasing_node:
                 decreasing_node.parent.setLeft(node)
             else:
                 decreasing_node.parent.setRight(node)
@@ -639,39 +666,39 @@ class AVLTreeList(object):
         if lst_height > former_height - 1:
             node = lst.getRoot()
             while node.height > former_height + 1:
-                node = node.getLeft()
+                node = node.getLeftNode()
             temp_node.setParent(node)
             temp_node.setLeft(self.root)
-            temp_node.getLeft().setParent(temp_node)
-            temp_node.setRight(node.getLeft())
-            temp_node.getRight().setParent(temp_node)
+            temp_node.getLeftNode().setParent(temp_node)
+            temp_node.setRight(node.getLeftNode())
+            temp_node.getRightNode().setParent(temp_node)
             temp_node.update()
             node.setLeft(temp_node)
             node.update()
-            while node.getParent() is not None:
-                node = node.getParent()
+            while node.getParentNode() is not None:
+                node = node.getParentNode()
                 node.update()
             self.root = node
         elif lst_height < former_height - 1:
             node = self.getRoot()
             while node.height > lst_height + 1:
-                node = node.getRight()
+                node = node.getRightNode()
             temp_node.setParent(node)
-            temp_node.setRight(node.getLeft())
-            temp_node.getRight().setParent(temp_node)
-            temp_node.setLeft(node.getLeft())
-            temp_node.getLeft().setParent(temp_node)
+            temp_node.setRight(node.getLeftNode())
+            temp_node.getRightNode().setParent(temp_node)
+            temp_node.setLeft(node.getLeftNode())
+            temp_node.getLeftNode().setParent(temp_node)
             temp_node.update()
             node.setLeft(temp_node)
             node.update()
-            while node.getParent() is not None:
-                node = node.getParent()
+            while node.getParentNode() is not None:
+                node = node.getParentNode()
                 node.update()
         else:
             temp_node.setLeft(self.getRoot())
-            temp_node.getLeft().setParent(temp_node)
+            temp_node.getLeftNode().setParent(temp_node)
             temp_node.setRight(lst.getRoot())
-            temp_node.getRight().setParent(temp_node)
+            temp_node.getRightNode().setParent(temp_node)
             temp_node.update()
             self.root = temp_node
 
@@ -746,126 +773,3 @@ def arrayToTreeRec(arr):
     left_node.parent = mid_node
     mid_node.update()
     return mid_node
-
-
-class ll_node:
-    def __init__(self, value):
-        self.value = value
-        self.next = None
-
-class linked_list:
-    def __init__(self):
-        self.size = 0
-        self.first = None
-        self.last = None
-
-    def insert(self, i, val):
-        if i > self.size:
-            return None
-        to_add = ll_node(val)
-        if self.size == 0:
-            self.first = self.last = to_add
-        elif i == 0:
-            to_add.next = self.first
-            self.first = to_add
-        elif i == self.size:
-            self.last.next = to_add
-            self.last = to_add
-        else:
-            pointer = self.first
-            for k in range(i-1):
-                pointer = pointer.next
-            to_add.next = pointer.next
-            pointer.next = to_add
-        self.size += 1
-
-
-def insert_beginning_tree(n: int) -> int:
-    tree = AVLTreeList()
-    start_time = time.time()
-    for i in range(n):
-        tree.insert(0, i)
-    return (time.time() - start_time) / n
-
-
-def insert_random_tree(n: int) -> int:
-    tree = AVLTreeList()
-    start_time = time.time()
-    for i in range(n):
-        tree.insert(random.randint(0, i), i)
-    return (time.time() - start_time) / n
-
-
-def insert_end_tree(n: int) -> int:
-    tree = AVLTreeList()
-    start_time = time.time()
-    for i in range(n):
-        tree.insert(i, i)
-    return (time.time() - start_time) / n
-
-
-def insert_beginning_llist(n: int) -> int:
-    linked = linked_list()
-    start_time = time.time()
-    for i in range(n):
-        linked.insert(0, i)
-    return (time.time() - start_time) / n
-
-
-def insert_random_llist(n: int) -> int:
-    linked = linked_list()
-    start_time = time.time()
-    for i in range(n):
-        linked.insert(random.randint(0, i), i)
-    return (time.time() - start_time) / n
-
-
-def insert_end_llist(n: int) -> int:
-    linked = linked_list()
-    start_time = time.time()
-    for i in range(n):
-        linked.insert(i, i)
-    return (time.time() - start_time) / n
-
-
-def insert_beginning_arr(n: int) -> int:
-    lst = []
-    start_time = time.time()
-    for i in range(n):
-        lst.insert(0, i)
-    return (time.time() - start_time) / n
-
-
-def insert_random_arr(n: int) -> int:
-    lst = []
-    start_time = time.time()
-    for i in range(n):
-        lst.insert(random.randint(0, i), i)
-    return (time.time() - start_time) / n
-
-
-def insert_end_arr(n: int) -> int:
-    lst = []
-    start_time = time.time()
-    for i in range(n):
-        lst.insert(i, i)
-    return (time.time() - start_time) / n
-
-
-def main():
-    print("testing firsts: n, tree, llist, arr")
-    for i in range(1, 11):
-        n = 1500 * i
-        print(f"{n},{insert_beginning_tree(n)},{insert_beginning_llist(n)},{insert_beginning_arr(n)}")
-    print("testing randoms: n, tree, llist, arr")
-    for i in range(1, 11):
-        n = 1500 * i
-        print(f"{n},{insert_random_tree(n)},{insert_random_llist(n)},{insert_random_arr(n)}")
-    print("testing ends: n, tree, llist, arr")
-    for i in range(1, 11):
-        n = 1500 * i
-        print(f"{n},{insert_end_tree(n)},{insert_end_llist(n)},{insert_end_arr(n)}")
-
-
-if __name__ == '__main__':
-    main()
