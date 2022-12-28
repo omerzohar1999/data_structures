@@ -246,7 +246,7 @@ class testAVLList(unittest.TestCase):
                 self.check_first(T, L)
                 self.check_last(T, L)
                 T.delete(0)
-                T.printt()
+                # T.printt()
                 L.pop(0)
         self.assertEqual(len(L), 0)
 
@@ -900,7 +900,7 @@ class testAVLList(unittest.TestCase):
             else:
                 T.delete(T.length()//2)
             self.in_order(T, T.getRoot(), self.check_BF)
-            T.printt()
+            # T.printt()
 
     ###TESTING SEARCH###
 
