@@ -5,7 +5,6 @@
 # name2    -
 
 import random
-import time
 
 """A class representing a node in an AVL tree"""
 
@@ -86,7 +85,6 @@ class AVLNode(object):
     def getParent(self):
         return self.parent if self.parent is not None and self.parent.isRealNode() else None
 
-
     """return the value
 
     @rtype: str
@@ -94,7 +92,7 @@ class AVLNode(object):
     """
 
     def getValue(self):
-        return self.value
+        return self.value if self.isRealNode() else None
 
     """returns the height
 
@@ -145,7 +143,7 @@ class AVLNode(object):
     def setRight(self, node):
         self.right = node
 
-    """sets parent
+    """sets parent node
 
     @type node: AVLNode
     @param node: a node
@@ -154,7 +152,7 @@ class AVLNode(object):
     def setParent(self, node):
         self.parent = node
 
-    """sets value
+    """sets value to node
 
     @type value: str
     @param value: data
@@ -163,7 +161,7 @@ class AVLNode(object):
     def setValue(self, value):
         self.value = value
 
-    """sets the balance factor of the node
+    """sets the node's height
 
     @type h: int
     @param h: the height
@@ -172,10 +170,10 @@ class AVLNode(object):
     def setHeight(self, h):
         self.height = h
 
-    """sets the balance factor of the node
+    """sets the node's size
 
-    @type h: int
-    @param h: the height
+    @type s: int
+    @param s: the size
     """
 
     def setSize(self, s):
@@ -190,10 +188,11 @@ class AVLNode(object):
     def isRealNode(self):
         return self.is_real
 
-    """returns an array containing all 
+    """returns an array containing all elements in this node's subtree.
+    Complexity is O(n) as described in documentation.
 
-    @rtype: bool
-    @returns: False if self is a virtual node, True otherwise.
+    @rtype: list
+    @returns: array containing all subelements of this node.
     """
 
     def nodeToArray(self):
@@ -212,7 +211,8 @@ class AVLNode(object):
         self.size = self.left.size + self.right.size + 1
         self.height = max(self.left.height, self.right.height) + 1
 
-    """finds node containing the successor
+    """finds node containing the successor, according to the method learned in class.
+    Complexity is O(h)=O(log_2(n)) as we analyzed in class.
 
     @pre: node is not max in its tree
     """
@@ -258,7 +258,8 @@ class AVLTreeList(object):
     def empty(self):
         return self.size == 0
 
-    """retrieves the node containing the i'th item in the list
+    """retrieves the node containing the i'th item in the list, similar to finger tree we learned in class.
+    Its complexity is O(log_2(i)) as we've seen in class.
 
     @type i: int
     @pre: 0 <= i < self.length()
@@ -268,21 +269,15 @@ class AVLTreeList(object):
     """
 
     def retrieve_node(self, i):
-        if self.root is None or i < 0 or i >= self.root.size:   # added possibility that the tree is empty
-            print("CANNOT SEARCH FOR", i, "IN THE TREE")
-            print(self.size)
-            return None
         if i == 0:
-            return self.first_node
-        # if i == self.size - 1:    # using retrieve_node to fix max_node; screws it up
-        #     return self.max_node
+            return self.first_node  # to allow instant access
         pointer_node = self.first_node
-        new_index = i
-        while pointer_node.size <= i:
-            pointer_node = pointer_node.parent
-        while new_index != pointer_node.getLeftNode().size:
-            if pointer_node.getLeftNode().size < new_index:
-                new_index -= (pointer_node.getLeftNode().size + 1)
+        new_index = i  # index to look for in current subtree
+        while pointer_node.size <= i:  # while my subtree still doesn't have i elements...
+            pointer_node = pointer_node.parent  # go to parent for a larger subtree.
+        while new_index != pointer_node.getLeftNode().size:  # then binary search on node rank.
+            if pointer_node.getLeftNode().size < new_index:  # if my left subtree has less elements than new_index...
+                new_index -= (pointer_node.getLeftNode().size + 1)  # its in the right subtree, but in a smaller rank.
                 pointer_node = pointer_node.getRightNode()
             else:
                 pointer_node = pointer_node.getLeftNode()
@@ -297,9 +292,9 @@ class AVLTreeList(object):
     @returns: the the value of the i'th item in the list
     """
 
-    def retrieve(self, i):  # added possibility the index was invalid
+    def retrieve(self, i):
         node = self.retrieve_node(i)
-        return node.value if node is not None and node.isRealNode() else None
+        return node.value
 
     """Does maintenance for swapped nodes in LL/RR rotations
 
@@ -491,12 +486,10 @@ class AVLTreeList(object):
     @rtype: AVLNode
     @returns: the closest node to the deleted node: if deleted node had a son -> son, if deleted node was a leaf -> parent 
     """
-
-    # OMER - IT DOES NOT MAINTAIN AVL INVARIANT, NOTICE WHILE USING
     def delete_node(self, node):
         # maintain min_node, max_node
         if node == self.first_node:
-            self.first_node = self.first_node.right if self.first_node.right.isRealNode() else self.first_node.parent  # changed
+            self.first_node = self.first_node.right if self.first_node.right.isRealNode() else self.first_node.parent
         if node == self.last_node:
             self.last_node = self.retrieve_node(self.size - 2)
         # takes care of node with 2 children
@@ -545,7 +538,7 @@ class AVLTreeList(object):
         # perform a regular deletion
         deleted_node = self.retrieve_node(i)
         near_deleted_node = self.delete_node(deleted_node)
-        # fix AVL invariant & AVLTree fields - moved min-max maintaining into maintain
+        # fix AVL invariant & AVLTree fields
         return self.maintain(near_deleted_node)
 
     """returns the value of the first item in the list
@@ -591,11 +584,13 @@ class AVLTreeList(object):
     """
 
     def sort(self):
-        def merge_sort(array):
+        def merge_sort(array):  # O(nlogn) according to Extended Intro To Computer Science
             def merge(arr1, arr2):
                 merged_arr = []
                 i = j = 0
                 while i < len(arr1) or j < len(arr2):
+                    # Thanks to "node value can be None", this line might fail. However, it would fail on any DS,
+                    # as None cannot be compared with str..
                     if i >= len(arr1) or (j < len(arr2) and arr2[j] < arr1[i]):
                         merged_arr.append(arr2[j])
                         j += 1
@@ -611,9 +606,9 @@ class AVLTreeList(object):
                 return merge(merge_sort(left), merge_sort(right))
             return array
 
-        arr = self.listToArray()
-        sorted_arr = merge_sort(arr)
-        return arrayToTree(sorted_arr)
+        arr = self.listToArray()  # O(n)
+        sorted_arr = merge_sort(arr)  # O(nlogn)
+        return arrayToTree(sorted_arr)  # O(n)
 
     def append(self, val):
         return self.insert(self.length(), val)
@@ -630,16 +625,17 @@ class AVLTreeList(object):
     def permutation(self):
         def shuffle(array):
             end = len(array) - 1
-            while end > 0:
+            while end > 0:  # O(n) since everything inside happens in constant time, end decrements from n to 0.
                 i = random.randint(0, end)
                 value = array[i]
                 array[i] = array[end]
                 array[end] = value
                 end -= 1
 
-        arr = self.listToArray()
-        shuffle(arr)
-        return arrayToTree(arr)
+        # create array using listToArray, shuffle it, then create a tree out of it using arrayToTree.
+        arr = self.listToArray()  # O(n)
+        shuffle(arr)  # O(n)
+        return arrayToTree(arr)  # O(n)
 
     """concatenates lst to self
 
@@ -650,23 +646,30 @@ class AVLTreeList(object):
     """
 
     def concat(self, lst):
+        # save heights and sizes for both trees in order to determine where to start
         former_height = self.getRoot().height if self.getRoot() is not None else -1
         former_size = self.getRoot().size if self.getRoot() is not None else 0
         lst_height = lst.getRoot().height if lst.getRoot() is not None else -1
         lst_size = lst.getRoot().size if lst.getRoot() is not None else 0
+        # added an empty list - nothing should happen
         if lst_size == 0:
             return max(former_height, 0)
+        # this list is empty - it is the same as reassigning lst to it
         if former_size == 0:
             self.root = lst.root
             self.size = lst.size
             self.first_node = lst.first_node
             self.last_node = lst.last_node
             return max(lst_height, 0)
+        # create a temporary node which will be "x" in "join(T1, x, T2). we delete it in the end
         temp_node = AVLNode("0")
         if lst_height > former_height - 1:
+            # self should become a left subtree of lst
             node = lst.getRoot()
+            # find where to insert temp_node
             while node.height > former_height + 1:
                 node = node.getLeftNode()
+            # connect temp_node like "x" in AVLTree.Join(T1, x, T2). maintain node fields.
             temp_node.setParent(node)
             temp_node.setLeft(self.root)
             temp_node.getLeftNode().setParent(temp_node)
@@ -675,14 +678,19 @@ class AVLTreeList(object):
             temp_node.update()
             node.setLeft(temp_node)
             node.update()
+            # maintain node fields all the way up to the root.
             while node.getParentNode() is not None:
                 node = node.getParentNode()
                 node.update()
             self.root = node
+
         elif lst_height < former_height - 1:
+            # lst shoud become a right subtree in self
             node = self.getRoot()
+            # find where to insert temp_node
             while node.height > lst_height + 1:
                 node = node.getRightNode()
+            # connect temp_node like "x" in AVLTree.Join(T1, x, T2). maintain node fields.
             temp_node.setParent(node)
             temp_node.setRight(node.getLeftNode())
             temp_node.getRightNode().setParent(temp_node)
@@ -691,21 +699,24 @@ class AVLTreeList(object):
             temp_node.update()
             node.setLeft(temp_node)
             node.update()
+            # maintain node fields all the way up to the root.
             while node.getParentNode() is not None:
                 node = node.getParentNode()
                 node.update()
         else:
+            # trees are of somewhat same height, so they just become left and right subtrees of temp_node.
             temp_node.setLeft(self.getRoot())
             temp_node.getLeftNode().setParent(temp_node)
             temp_node.setRight(lst.getRoot())
             temp_node.getRightNode().setParent(temp_node)
             temp_node.update()
             self.root = temp_node
-
+        # maintain tree fields then delete temp_node.
+        # it is in index former_size since it is the first item after self.
         self.size = self.root.size
         self.last_node = lst.last_node
         self.delete(former_size)
-
+        # this calculation is thanks to the fun return value cases defined in forum.
         return abs(max(former_height, 0) - max(lst_height, 0))
 
     """searches for a *value* in the list
@@ -718,7 +729,7 @@ class AVLTreeList(object):
 
     def search(self, val):
         lst = self.listToArray()  # O(n)
-        for i in range(len(lst)):   # the total complexity is already O(n)
+        for i in range(len(lst)):   # w.c O(n), b.c O(1)
             if lst[i] == val:
                 return i
         return -1
@@ -742,16 +753,21 @@ class AVLTreeList(object):
 
 def arrayToTree(arr):
     tree = AVLTreeList()
+    # Create root of tree which has all nodes under it
     tree.root = arrayToTreeRec(arr)
+    # Update tree fields: size
     tree.size = tree.root.size
+    # Update tree fields: first_node
     pointer = tree.root
     while pointer.left.isRealNode():
         pointer = pointer.left
     tree.first_node = pointer
+    # Update tree fields: last_node
     pointer = tree.root
     while pointer.right.isRealNode():
         pointer = pointer.right
     tree.last_node = pointer
+
     return tree
 
 
@@ -763,10 +779,13 @@ def arrayToTree(arr):
 
 
 def arrayToTreeRec(arr):
+    # Take the middle array member and turn it into a node
     mid_loc = len(arr) // 2
     mid_node = AVLNode(arr[mid_loc])
-    right_node = arrayToTreeRec(arr[mid_loc + 1:]) if len(arr) - mid_loc - 1 > 0 else AVLNode(None, False)
+    # recursively create AVL tree roots for the right and left subtrees
+    right_node = arrayToTreeRec(arr[mid_loc + 1:]) if (len(arr) - mid_loc >= 0) else AVLNode(None, False)
     left_node = arrayToTreeRec(arr[:mid_loc]) if mid_loc > 0 else AVLNode(None, False)
+    # connect node with right and left subtrees
     mid_node.right = right_node
     right_node.parent = mid_node
     mid_node.left = left_node
