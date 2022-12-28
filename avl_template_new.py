@@ -5,6 +5,7 @@
 # name2    -
 
 import random
+import time
 
 """A class representing a node in an AVL tree"""
 
@@ -704,72 +705,6 @@ class AVLTreeList(object):
     def getRoot(self):
         return self.root
 
-    def printt(self):
-        out = ""
-        for row in self.printree(self.root):  # need printree.py file
-            out = out + row + "\n"
-        print(out)
-
-    def printree(self, t, bykey=True):
-        # for row in trepr(t, bykey):
-        #        print(row)
-        return self.trepr(t, False)
-
-    def trepr(self, t, bykey=False):
-        if t == None:
-            return ["#"]
-
-        thistr = str(t.key) if bykey else str(t.getValue())
-
-        return self.conc(self.trepr(t.left, bykey), thistr, self.trepr(t.right, bykey))
-
-    def conc(self, left, root, right):
-
-        lwid = len(left[-1])
-        rwid = len(right[-1])
-        rootwid = len(root)
-
-        result = [(lwid + 1) * " " + root + (rwid + 1) * " "]
-
-        ls = self.leftspace(left[0])
-        rs = self.rightspace(right[0])
-        result.append(ls * " " + (lwid - ls) * "_" + "/" + rootwid *
-                      " " + "\\" + rs * "_" + (rwid - rs) * " ")
-
-        for i in range(max(len(left), len(right))):
-            row = ""
-            if i < len(left):
-                row += left[i]
-            else:
-                row += lwid * " "
-
-            row += (rootwid + 2) * " "
-
-            if i < len(right):
-                row += right[i]
-            else:
-                row += rwid * " "
-
-            result.append(row)
-
-        return result
-
-    def leftspace(self, row):
-        # row is the first row of a left node
-        # returns the index of where the second whitespace starts
-        i = len(row) - 1
-        while row[i] == " ":
-            i -= 1
-        return i + 1
-
-    def rightspace(self, row):
-        # row is the first row of a right node
-        # returns the index of where the first whitespace ends
-        i = 0
-        while row[i] == " ":
-            i += 1
-        return i
-
 
 """returns an AVLTreeList representing an array given as a python list
 
@@ -813,40 +748,123 @@ def arrayToTreeRec(arr):
     return mid_node
 
 
-def insert_n_elements(n: int) -> int:
+class ll_node:
+    def __init__(self, value):
+        self.value = value
+        self.next = None
+
+class linked_list:
+    def __init__(self):
+        self.size = 0
+        self.first = None
+        self.last = None
+
+    def insert(self, i, val):
+        if i > self.size:
+            return None
+        to_add = ll_node(val)
+        if self.size == 0:
+            self.first = self.last = to_add
+        elif i == 0:
+            to_add.next = self.first
+            self.first = to_add
+        elif i == self.size:
+            self.last.next = to_add
+            self.last = to_add
+        else:
+            pointer = self.first
+            for k in range(i-1):
+                pointer = pointer.next
+            to_add.next = pointer.next
+            pointer.next = to_add
+        self.size += 1
+
+
+def insert_beginning_tree(n: int) -> int:
     tree = AVLTreeList()
-    to_return = 0
-    for val in range(n):
-        to_return += tree.insert(random.randint(0, tree.size), val)
-    return to_return
+    start_time = time.time()
+    for i in range(n):
+        tree.insert(0, i)
+    return (time.time() - start_time) / n
 
 
-def insert_n_elements_then_delete(n: int) -> int:
+def insert_random_tree(n: int) -> int:
     tree = AVLTreeList()
-    to_return_insertions = 0
-    for val in range(n):
-        to_return_insertions += tree.insert(random.randint(0, tree.size), val)
-    to_return = to_return_insertions
-    while not tree.empty():
-        to_return += tree.delete(random.randint(0, tree.size - 1))
-    return to_return_insertions, to_return
+    start_time = time.time()
+    for i in range(n):
+        tree.insert(random.randint(0, i), i)
+    return (time.time() - start_time) / n
 
 
-def insert_n_elements_then_alternate(n: int) -> int:
+def insert_end_tree(n: int) -> int:
     tree = AVLTreeList()
-    to_return = 0
-    for val in range(n//2):
-        to_return += tree.insert(random.randint(0, tree.size), val)
-    for i in range(n//8):
-        to_return += tree.insert(random.randint(0, tree.size), i + n//2)
-        to_return += tree.delete(random.randint(0, tree.size - 1))
-    return to_return
+    start_time = time.time()
+    for i in range(n):
+        tree.insert(i, i)
+    return (time.time() - start_time) / n
+
+
+def insert_beginning_llist(n: int) -> int:
+    linked = linked_list()
+    start_time = time.time()
+    for i in range(n):
+        linked.insert(0, i)
+    return (time.time() - start_time) / n
+
+
+def insert_random_llist(n: int) -> int:
+    linked = linked_list()
+    start_time = time.time()
+    for i in range(n):
+        linked.insert(random.randint(0, i), i)
+    return (time.time() - start_time) / n
+
+
+def insert_end_llist(n: int) -> int:
+    linked = linked_list()
+    start_time = time.time()
+    for i in range(n):
+        linked.insert(i, i)
+    return (time.time() - start_time) / n
+
+
+def insert_beginning_arr(n: int) -> int:
+    lst = []
+    start_time = time.time()
+    for i in range(n):
+        lst.insert(0, i)
+    return (time.time() - start_time) / n
+
+
+def insert_random_arr(n: int) -> int:
+    lst = []
+    start_time = time.time()
+    for i in range(n):
+        lst.insert(random.randint(0, i), i)
+    return (time.time() - start_time) / n
+
+
+def insert_end_arr(n: int) -> int:
+    lst = []
+    start_time = time.time()
+    for i in range(n):
+        lst.insert(i, i)
+    return (time.time() - start_time) / n
 
 
 def main():
+    print("testing firsts: n, tree, llist, arr")
     for i in range(1, 11):
         n = 1500 * i
-
+        print(f"{n},{insert_beginning_tree(n)},{insert_beginning_llist(n)},{insert_beginning_arr(n)}")
+    print("testing randoms: n, tree, llist, arr")
+    for i in range(1, 11):
+        n = 1500 * i
+        print(f"{n},{insert_random_tree(n)},{insert_random_llist(n)},{insert_random_arr(n)}")
+    print("testing ends: n, tree, llist, arr")
+    for i in range(1, 11):
+        n = 1500 * i
+        print(f"{n},{insert_end_tree(n)},{insert_end_llist(n)},{insert_end_arr(n)}")
 
 
 if __name__ == '__main__':
