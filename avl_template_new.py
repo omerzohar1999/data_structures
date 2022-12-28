@@ -26,9 +26,9 @@ class AVLNode(object):
         self.size = 0
 
         if is_real:
-            self.left = AVLNode(None, True)
+            self.left = AVLNode(None, is_real=False)
             self.left.parent = self
-            self.right = AVLNode(None, True)
+            self.right = AVLNode(None, is_real=False)
             self.right.parent = self
             self.height = 0  # as a leaf
             self.size = 1
@@ -93,6 +93,10 @@ class AVLNode(object):
     """
 
     def getBF(self):
+        if self.left is None:
+            self.left = AVLNode(None, False)
+        if self.right is None:
+            self.right = AVLNode(None, False)
         return self.left.getHeight() - self.right.getHeight()
 
     """sets left child
@@ -180,10 +184,9 @@ class AVLNode(object):
         self.size = self.left.size + self.right.size + 1
         self.height = max(self.left.height, self.right.height) + 1
 
-    """fixes fields of a node to a correct size after rotations
+    """finds node containing the successor
 
-    @pre: node.left.size and node.right.size are correct
-    @pre: node.left.height and node.right.height are correct
+    @pre: node is not max in its tree
     """
 
     def successor(self):
@@ -268,7 +271,7 @@ class AVLTreeList(object):
 
     def retrieve(self, i):  # added possibility the index was invalid
         node = self.retrieve_node(i)
-        return node.value if node is not None else None
+        return node.value if node is not None and node.isRealNode() else None
 
     """Does maintenance for swapped nodes in LL/RR rotations
 
@@ -416,7 +419,7 @@ class AVLTreeList(object):
 
     def insert(self, i, val):
         def inner_insert(parent_node, son, r_l_flag):
-            subtree = AVLNode(None)
+            subtree = AVLNode(None, is_real=False)
             if r_l_flag == 'R':
                 subtree = parent_node.right
                 parent_node.right = son
@@ -445,7 +448,7 @@ class AVLTreeList(object):
             self.last_node = new_node
         else:
             next_node = self.retrieve_node(i)   # fixed to i instead of i+1
-            if not next_node.left.isRealNode:
+            if not next_node.left.isRealNode():
                 inner_insert(next_node, new_node, 'L')  # fixed to next node instead of new node
             else:
                 prev_node = self.retrieve_node(i - 1)
@@ -469,7 +472,7 @@ class AVLTreeList(object):
         if node == self.last_node:
             self.last_node = self.retrieve_node(self.size - 2)
         # takes care of node with 2 children
-        if node.left.isRealNode() None and node.right.isRealNode():
+        if node.left.isRealNode() and node.right.isRealNode():
             successor = node.successor()
             node.value = successor.value
             node = successor
@@ -477,7 +480,7 @@ class AVLTreeList(object):
         # actually delete
         node.right.parent = node.parent
         node.left.parent = node.parent
-        if not node.left.isRealNode:  # has only right son or no sons at all
+        if not node.left.isRealNode():  # has only right son or no sons at all
             if node.parent is not None:
                 if node.parent.left == node:
                     node.parent.left = node.right
@@ -622,7 +625,7 @@ class AVLTreeList(object):
         former_height = self.getRoot().height if self.getRoot() is not None else -1
         former_size = self.getRoot().size if self.getRoot() is not None else 0
         lst_height = lst.getRoot().height if lst.getRoot() is not None else -1
-        lst_size = lst.getRoot().size  if lst.getRoot() is not None else 0
+        lst_size = lst.getRoot().size if lst.getRoot() is not None else 0
         if lst_size == 0:
             return max(former_height, 0)
         if former_size == 0:
@@ -800,8 +803,8 @@ def arrayToTree(arr):
 def arrayToTreeRec(arr):
     mid_loc = len(arr) // 2
     mid_node = AVLNode(arr[mid_loc])
-    right_node = arrayToTreeRec(arr[mid_loc + 1:]) if len(arr) - mid_loc - 1 > 0 else AVLNode(None)
-    left_node = arrayToTreeRec(arr[:mid_loc]) if mid_loc > 0 else AVLNode(None)
+    right_node = arrayToTreeRec(arr[mid_loc + 1:]) if len(arr) - mid_loc - 1 > 0 else AVLNode(None, False)
+    left_node = arrayToTreeRec(arr[:mid_loc]) if mid_loc > 0 else AVLNode(None, False)
     mid_node.right = right_node
     right_node.parent = mid_node
     mid_node.left = left_node
