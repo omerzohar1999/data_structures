@@ -1,16 +1,148 @@
-# username -
-# id1      -
-# name1    -
-# id2      -
-# name2    -
+
 
 import random
+
+
+"""A class representing a node in a linked list"""
+
+
+class LLNode:
+    """
+    Constructor
+        Complexity: O(1)
+
+    @type value: str | None | else
+    @param value: data of your node
+    """
+    def __init__(self, value):
+        self.value = value
+        self.next = None
+
+    """
+    Returns the next node
+        Complexity O(1)
+    
+    @rtype: LLNode | None
+    @returns: The next node if there is one, None else
+    """
+    def get_next(self):
+        return self.next
+
+    """
+    Returns the node's value
+        Complexity O(1)
+
+    @rtype: str| None | else
+    @returns: The next node if there is one, None else
+    """
+    def get_value(self):
+        return self.value
+
+    """
+    sets the node's next node
+        Complexity O(1)
+
+    @type node: LLnode
+    @param node: the node to become this node's next
+    """
+    def set_next(self, node):
+        self.next = node
+
+    """
+    sets the node's value
+        Complexity O(1)
+
+    @type value: str | None | else
+    @param node: the value to insert to this node
+        """
+    def set_value(self, value):
+        self.value = value
+
+
+"""A class representing a linked list"""
+
+
+class LinkedList:
+    """
+    Constructor
+        Complexity: O(1)
+
+    @type value: str | None | else
+    @param value: data of your node
+    """
+    def __init__(self):
+        self.first = None
+        self.last = None
+        self.size = 0
+
+    """
+    adds a value at the beginning of the list
+        Complexity O(1) - no recursion or loops, all actions are constant time
+
+    @type value: str | None | else
+    @param node: the value to insert at the list's beginning
+    """
+    def insert_first(self, value):
+        to_insert = LLNode(value)
+        if self.size == 0:
+            self.first = self.last = to_insert
+        else:
+            to_insert.set_next(self.first)
+            self.first = to_insert
+        self.size += 1
+
+    """
+    adds a value at the end of the list
+        Complexity O(1) - no recursion or loops, all actions are constant time
+
+    @type value: str | None | else
+    @param node: the value to insert at the list's end
+    """
+    def insert_last(self, value):
+        to_insert = LLNode(value)
+        if self.size == 0:
+            self.first = self.last = to_insert
+        else:
+            self.last.set_next(to_insert)
+            self.last = to_insert
+        self.size += 1
+
+    """
+    adds all values from another list at the end of this one
+        Complexity O(1) - no recursion or loops, all actions are constant time
+
+    @type ll: LinkedList
+    @param ll: the list to concatenate to self
+    """
+    def concat(self, ll):
+        if self.size == 0:
+            self = ll
+        elif ll.size > 0:
+            self.last.set_next(ll.first)
+            self.last = ll.last
+            self.size += ll.size
+
+    """
+    Outputs an array containing the list's values by their order
+        Complexity O(n) - iterating once per list node
+
+    @rtype: lst
+    @returns: an array in which arr[i] is the value of the i'th node in the list
+    """
+    def to_arr(self):
+        pointer = self.first
+        arr = []
+        while pointer is not None:
+            arr.append(pointer.value)
+            pointer = pointer.get_next()
+        return arr
+
 
 """A class representing a node in an AVL tree"""
 
 
 class AVLNode(object):
-    """Constructor, you are allowed to add more fields.
+    """Constructor
         Complexity: O(1)
 
     @type value: str | None | else
@@ -208,17 +340,22 @@ class AVLNode(object):
         return self.is_real
 
     """returns an array containing all elements in this node's subtree.
-    Complexity is O(n) as described in documentation.
+    Complexity is O(n):
+        each node is inserted once - all-in-all O(n) insertions
+        arrays are then connected in doubles - right and left sub-arrays, meaning O(log(n)) connections, each is O(1)
+        all-in-all O(n+log(n)) = O(n) 
 
     @rtype: list
     @returns: array containing all subelements of this node.
     """
 
-    def nodeToArray(self):
-        left_node_array = self.getLeftNode().nodeToArray() if self.getLeftNode().isRealNode() else []
-        right_node_array = self.getRightNode().nodeToArray() if self.getRightNode().isRealNode() else []
-        self_array = [self.value] if self.isRealNode() else []  # added in case node is virtual
-        return left_node_array + self_array + right_node_array
+    def nodeToLinkedList(self):  # Recursive, but all-in-all O(n), since we insert each node once
+        left_node_list = self.getLeftNode().nodeToLinkedList() if self.getLeftNode().isRealNode() else LinkedList()
+        right_node_list = self.getRightNode().nodeToLinkedList() if self.getRightNode().isRealNode() else LinkedList()
+        if self.isRealNode():
+            left_node_list.insert_last(self.value)
+        left_node_list.concat(right_node_list)
+        return left_node_list
 
     """fixes fields of a node to a correct size after rotations
         Complexity: O(1)
@@ -601,8 +738,10 @@ class AVLTreeList(object):
     @returns: a list of strings representing the data structure
     """
 
-    def listToArray(self):  # added possibility that list is empty so root is None
-        return self.root.nodeToArray() if self.root is not None else []
+    def listToArray(self):
+        return self.root.nodeToLinkedList().to_arr() if self.root is not None else []  # Two O(n) actions hence O(n)
+
+
 
     """returns the size of the list 
         Complexity: O(1) 
