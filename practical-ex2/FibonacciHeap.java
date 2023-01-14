@@ -5,7 +5,15 @@
  */
 public class FibonacciHeap
 {
+    HeapNode min;
+    int size;
+    int marked;
+    int links;
+    int cuts;
+    int trees;
+    public FibonacciHeap(){
 
+    }
    /**
     * public boolean isEmpty()
     *
@@ -14,7 +22,7 @@ public class FibonacciHeap
     */
     public boolean isEmpty()
     {
-    	return false; // should be replaced by student code
+    	return self.size == 0;
     }
 		
    /**
@@ -26,8 +34,13 @@ public class FibonacciHeap
     * Returns the newly created node.
     */
     public HeapNode insert(int key)
-    {    
-    	return new HeapNode(key); // should be replaced by student code
+    {
+        HeapNode to_insert = new HeapNode(key);
+        self.size += 1;
+        /*
+        do fib heap stuff
+         */
+    	return to_insert;
     }
 
    /**
@@ -61,7 +74,10 @@ public class FibonacciHeap
     */
     public void meld (FibonacciHeap heap2)
     {
-    	  return; // should be replaced by student code   		
+        /*
+        concat roots lists and add sizes
+         */
+        self.size += heap2.size()
     }
 
    /**
@@ -96,8 +112,9 @@ public class FibonacciHeap
     *
     */
     public void delete(HeapNode x) 
-    {    
-    	return; // should be replaced by student code
+    {
+        this.size -= 1;
+        //TODO: delete x
     }
 
    /**
@@ -118,7 +135,7 @@ public class FibonacciHeap
     */
     public int nonMarked() 
     {    
-        return -232; // should be replaced by student code
+        return this.size - this.marked; // should be replaced by student code
     }
 
    /**
@@ -132,7 +149,7 @@ public class FibonacciHeap
     */
     public int potential() 
     {    
-        return -234; // should be replaced by student code
+        return this.trees - (2 * this.marked); // should be replaced by student code
     }
 
    /**
@@ -145,7 +162,7 @@ public class FibonacciHeap
     */
     public static int totalLinks()
     {    
-    	return -345; // should be replaced by student code
+    	return this.links; // should be replaced by student code
     }
 
    /**
@@ -157,7 +174,7 @@ public class FibonacciHeap
     */
     public static int totalCuts()
     {    
-    	return -456; // should be replaced by student code
+    	return this.cuts; // should be replaced by student code
     }
 
      /**
@@ -184,7 +201,12 @@ public class FibonacciHeap
     public static class HeapNode{
 
     	public int key;
-
+        int rank;
+        boolean mark;
+        HeapNode child;
+        HeapNode next;
+        HeapNode prev;
+        HeapNode parent;
     	public HeapNode(int key) {
     		this.key = key;
     	}
@@ -192,5 +214,38 @@ public class FibonacciHeap
     	public int getKey() {
     		return this.key;
     	}
-    }
+
+       public HeapNode getChild() {
+           return child;
+       }
+
+       public HeapNode getNext() {
+           return next;
+       }
+
+       public HeapNode getParent() {
+           return parent;
+       }
+
+       public HeapNode getPrev() {
+           return prev;
+       }
+
+       public int getRank() {
+           return rank;
+       }
+
+       public boolean isMark() {
+           return mark;
+       }
+
+       public void setChild(HeapNode child) {
+           this.child = child;
+       }
+
+       public void flipMark() {
+           this.mark = !this.mark;
+       }
+   }
+
 }
