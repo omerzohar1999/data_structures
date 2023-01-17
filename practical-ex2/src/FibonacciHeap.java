@@ -17,6 +17,9 @@ public class FibonacciHeap
         this.size = 0;
         this.marked = 0;
         this.trees = 0;
+        min = null;
+        oldest_root = null;
+        newest_root = null;
 
     }
    /**
@@ -47,8 +50,9 @@ public class FibonacciHeap
             this.oldest_root = this.min;
         }
         else{
-            to_insert.setPrev(this.newest_root);
-            this.newest_root.setNext(to_insert);
+            addNodeToTopList(to_insert); // also sets current newest_node & increases trees field
+            //to_insert.setPrev(this.newest_root);
+            //this.newest_root.setNext(to_insert);
             if(to_insert.getKey() < this.min.getKey()){
                 this.min = to_insert;
             }
@@ -65,8 +69,71 @@ public class FibonacciHeap
     */
     public void deleteMin()
     {
-     	return; // should be replaced by student code
+        if (size <= 1) {
+            new FibonacciHeap();
+            return;
+        }
+        size --;
+        HeapNode son = min.getChild();
+        while (son != null) {
+            cut(son); // does it suppose to affect cuts field? if not, we can use the 2 methods that called in cut method
+            son = son.getNext();
+        }
+        removeNodeFromList(min);
+        min = findNewMin();
+    }
 
+    private HeapNode findNewMin(){
+        consolidate();
+        HeapNode node = oldest_root, minNode = oldest_root;
+        int minKey = node.getKey();
+        node = node.getNext();
+        while(node != null) {
+            if (node.getKey() < minKey) {
+                minKey = node.getKey();
+                minNode = node;
+            }
+            node = node.getNext();
+        }
+        return minNode;
+    }
+
+    /**
+     * @pre: node1.getRank() == node2.getRank()
+     * @pre: node.isRoot() && node2.isRoot()
+     * @param node1
+     * @param node2
+     */
+    protected void link(HeapNode node1, HeapNode node2) {
+        removeNodeFromList(node2);
+        // make node2 son of node1
+        if (node1.getChild() != null) {
+            node1.getChild().setPrev(node2);
+            node2.setNext(node1.getChild());
+        }
+        node1.setChild(node2);
+        // maintain fields: marked, rank, links
+        unmark(node2);
+        node1.setRank(node1.getRank()+1);
+        links++;
+    }
+
+    void consolidate(){
+        HeapNode[] nodesMapping = new HeapNode[trees];
+        HeapNode node = oldest_root;
+        while (node != null) {
+            int i = node.getRank();
+            while (nodesMapping[i] != null) {
+                link(node, nodesMapping[i]);
+                nodesMapping[i] = null;
+                i++;
+            }
+            nodesMapping[i] = node;
+            if(!node.hasNext()){
+                newest_root = node;
+            }
+            node = node.getNext();
+        }
     }
 
    /**
@@ -159,7 +226,78 @@ public class FibonacciHeap
     */
     public void decreaseKey(HeapNode x, int delta)
     {
-    	return; // should be replaced by student code
+        // set key according to delta
+        x.setKey(x.getKey() - delta);
+        // maintain min field
+        if (x.getKey() < min.getKey()) {
+            min = x;
+        }
+        // maintain heap invariant
+        if (x.isRoot() && x.getKey() < x.getParent().getKey()){
+            cascadingCut(x);
+        }
+    }
+
+
+    private void removeNodeFromList(HeapNode x){
+        unmark(x);
+        // take care of parent, if exist
+        if (x.isRoot()) {
+            HeapNode parent = x.getParent();
+            parent.setRank(parent.getRank() - 1);
+            if (!x.hasPrev()){
+                parent.setChild(x.getNext());
+            }
+        else trees--;
+        // remove x from origin list
+        }
+        if(x.hasPrev()) {
+            x.getPrev().setNext(x.getNext());
+        }
+        if (x.hasNext()){
+            x.getNext().setPrev(x.getPrev());
+        }
+        // detach x
+        x.setParent(null);
+        x.setNext(null);
+        x.setPrev(null);
+    }
+
+    private void unmark(HeapNode x) {
+        if(x.isMarked()) {
+            x.flipMark();
+            marked--;
+        }
+    }
+
+    private void addNodeToTopList(HeapNode x){
+        newest_root.setNext(x);
+        x.setPrev(newest_root);
+        x.setNext(null);
+        newest_root = x;
+        trees++;
+    }
+
+    protected void cut(HeapNode x){
+        cuts ++;
+        removeNodeFromList(x);
+        addNodeToTopList(x);
+    }
+
+    /**
+     * @pre: !min.isMarked()
+     * @param son
+     */
+    void cascadingCut(HeapNode son){
+        HeapNode parent = son.getParent();
+        cut(son);
+        if(parent.isMarked()){
+            cascadingCut(parent);
+        }
+        else {
+            parent.flipMark();
+            marked ++;
+        }
     }
 
    /**
@@ -196,7 +334,7 @@ public class FibonacciHeap
     */
     public static int totalLinks()
     {
-    	return links; // should be replaced by student code
+    	return links;
     }
 
    /**
@@ -208,7 +346,28 @@ public class FibonacciHeap
     */
     public static int totalCuts()
     {
-    	return cuts; // should be replaced by student code
+    	return cuts;
+    }
+
+    private void copyHeapRec(FibonacciHeap copy, HeapNode node, int depth) {
+        if (depth == 0) {
+            return;
+        }
+        while (node != null) {
+            copy.insert(node.getKey());
+            copyHeapRec(copy, node.getChild(), depth--);
+            node = node.getNext();
+        }
+    }
+
+    FibonacciHeap copyHeap(int maxLevel) {
+        FibonacciHeap copy = new FibonacciHeap();
+        copyHeapRec(copy, min, maxLevel);
+        return copy;
+    }
+
+    public FibonacciHeap copy() {
+        return copyHeap(min.getRank());
     }
 
      /**
@@ -221,8 +380,21 @@ public class FibonacciHeap
     */
     public static int[] kMin(FibonacciHeap H, int k)
     {
-        int[] arr = new int[100];
-        return arr; // should be replaced by student code
+        if (k >= H.size()) {
+            k = H.size();
+        }
+        HeapNode tree = H.min;
+        // determine number of levels
+        int maxLevelToCopy = tree.findMaxLevelToCopy(k);
+        // add top levels leaves to new Heap
+        FibonacciHeap minH = H.copyHeap(maxLevelToCopy);
+        // commit deleteMin k times into array
+        int[] arr = new int[k];
+        for (int i=0; i < arr.length; i++) {
+            arr[i] = minH.findMin().getKey();
+            minH.deleteMin();
+        }
+        return arr;
     }
 
    /**
@@ -288,9 +460,15 @@ public class FibonacciHeap
            this.prev = prev;
        }
 
+       public void setKey(int value){ this.key = value; }
+
        public void flipMark() {
            this.mark = !this.mark;
        }
+
+       public void setMark(boolean val) { this.mark = val; }
+
+       public void setRank(int val) { this.rank = val; }
 
        public boolean isLeaf(){
             return this.getChild() == null;
@@ -298,6 +476,43 @@ public class FibonacciHeap
        public boolean isRoot() {
            return this.getParent() == null;
        }
+
+       public boolean hasNext() { return this.next != null; }
+
+       public boolean hasPrev() { return this.prev != null; }
+
+       private static int nChooseK(int n, int k) {
+            int dif = n - k, nFactorial = 1, kFactorial = 1, difFactorial = 1;
+            for (int i=2; i <=n; i++) {
+                nFactorial = nFactorial * i;
+                if(i <= k) {
+                    kFactorial = kFactorial * i;
+                }
+                if(i <= dif) {
+                    difFactorial = difFactorial * i;
+                }
+            }
+            return nFactorial / (kFactorial * difFactorial);
+       }
+
+       /**
+        * @pre: this.isRoot()
+        * @post: $ret >=0 && $ret < height (== rank)
+        * @post: level > rank --> $ret = calculateSizeOfTopLevels(rank)
+        * @param k
+        * @return int sum == minimal depth that surely contains k node within  above
+        */
+       int findMaxLevelToCopy(int k) {
+           int sum = 0;
+            for (int i=0; i < k; i++) {
+                sum = sum + nChooseK(k,i);
+                if (sum >= k) {
+                    return i - 1;
+                }
+            }
+            return rank - 1;
+       }
+
    }
 
    public static void main(String[] args){
