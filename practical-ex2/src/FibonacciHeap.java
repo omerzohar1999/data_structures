@@ -70,7 +70,12 @@ public class FibonacciHeap
     public void deleteMin()
     {
         if (size <= 1) {
-            new FibonacciHeap();
+            this.size = 0;
+            this.marked = 0;
+            this.trees = 0;
+            min = null;
+            oldest_root = null;
+            newest_root = null;
             return;
         }
         size --;
@@ -104,35 +109,44 @@ public class FibonacciHeap
      * @param node1
      * @param node2
      */
-    protected void link(HeapNode node1, HeapNode node2) {
+    protected HeapNode link(HeapNode node1, HeapNode node2) {
+        if (node1.getKey() > node2.getKey()) {
+            HeapNode node = node1;
+            node1 = node2;
+            node2 = node;
+        }
         removeNodeFromList(node2);
         // make node2 son of node1
         if (node1.getChild() != null) {
             node1.getChild().setPrev(node2);
-            node2.setNext(node1.getChild());
         }
+        node2.setNext(node1.getChild());
+        node2.setPrev(null);
         node1.setChild(node2);
+        node2.setParent(node1);
         // maintain fields: marked, rank, links
         unmark(node2);
         node1.setRank(node1.getRank()+1);
         links++;
+        return node1;
     }
 
     void consolidate(){
         HeapNode[] nodesMapping = new HeapNode[trees];
-        HeapNode node = oldest_root;
+        HeapNode node = oldest_root, position;
         while (node != null) {
-            int i = node.getRank();
-            while (nodesMapping[i] != null) {
-                link(node, nodesMapping[i]);
-                nodesMapping[i] = null;
-                i++;
-            }
-            nodesMapping[i] = node;
-            if(!node.hasNext()){
+            position = node.getNext();
+            if(position == null){
                 newest_root = node;
             }
-            node = node.getNext();
+            int i = node.getRank();
+            while (nodesMapping[i] != null) {
+                node = link(node, nodesMapping[i]);
+                nodesMapping[i] = null;
+                i = node.getRank();
+            }
+            nodesMapping[i] = node;
+            node = position;
         }
     }
 
@@ -238,17 +252,24 @@ public class FibonacciHeap
         }
     }
 
-
     private void removeNodeFromList(HeapNode x){
         unmark(x);
         // take care of parent, if exist
         if (x.isRoot()) {
-            HeapNode parent = x.getParent();
-            parent.setRank(parent.getRank() - 1);
-            if (!x.hasPrev()){
-                parent.setChild(x.getNext());
+            if (x == oldest_root) {
+                oldest_root = x.getNext();
             }
-        else trees--;
+            if (x == newest_root) {
+                newest_root = x.getPrev();
+            }
+            trees--;
+            }
+            else {
+                HeapNode parent = x.getParent();
+                parent.setRank(parent.getRank() - 1);
+                if (!x.hasPrev()){
+                    parent.setChild(x.getNext());
+            }
         // remove x from origin list
         }
         if(x.hasPrev()) {
@@ -415,7 +436,7 @@ public class FibonacciHeap
         HeapNode parent;
     	public HeapNode(int key) {
     		this.key = key;
-            this.rank = 1;
+            this.rank = 0;
             this.mark = false;
     	}
 
