@@ -79,10 +79,11 @@ public class FibonacciHeap
             return;
         }
         size --;
-        HeapNode son = min.getChild();
+        HeapNode son = min.getChild(), position;
         while (son != null) {
+            position = son.getNext();
             cut(son); // does it suppose to affect cuts field? if not, we can use the 2 methods that called in cut method
-            son = son.getNext();
+            son = position;
         }
         removeNodeFromList(min);
         min = findNewMin();
@@ -132,7 +133,7 @@ public class FibonacciHeap
     }
 
     void consolidate(){
-        HeapNode[] nodesMapping = new HeapNode[trees];
+        HeapNode[] nodesMapping = new HeapNode[(int) (Math.log(size) / Math.log(2)) + 1];
         HeapNode node = oldest_root, position;
         while (node != null) {
             position = node.getNext();
@@ -247,7 +248,7 @@ public class FibonacciHeap
             min = x;
         }
         // maintain heap invariant
-        if (x.isRoot() && x.getKey() < x.getParent().getKey()){
+        if ((!x.isRoot()) && x.getKey() < x.getParent().getKey()){
             cascadingCut(x);
         }
     }
@@ -264,14 +265,14 @@ public class FibonacciHeap
             }
             trees--;
             }
-            else {
-                HeapNode parent = x.getParent();
-                parent.setRank(parent.getRank() - 1);
-                if (!x.hasPrev()){
-                    parent.setChild(x.getNext());
+        else {
+            HeapNode parent = x.getParent();
+            parent.setRank(parent.getRank() - 1);
+            if (!x.hasPrev()){
+                parent.setChild(x.getNext());
             }
-        // remove x from origin list
         }
+        // remove x from origin list
         if(x.hasPrev()) {
             x.getPrev().setNext(x.getNext());
         }
@@ -312,6 +313,9 @@ public class FibonacciHeap
     void cascadingCut(HeapNode son){
         HeapNode parent = son.getParent();
         cut(son);
+        if(parent.isRoot()) {
+            return;
+        }
         if(parent.isMarked()){
             cascadingCut(parent);
         }
