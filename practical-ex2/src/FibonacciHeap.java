@@ -48,6 +48,7 @@ public class FibonacciHeap
             this.newest_root = to_insert;
             this.min = this.newest_root;
             this.oldest_root = this.min;
+            this.trees = 1;
         }
         else{
             addNodeToTopList(to_insert); // also sets current newest_node & increases trees field
@@ -82,7 +83,8 @@ public class FibonacciHeap
         HeapNode son = min.getChild(), position;
         while (son != null) {
             position = son.getNext();
-            cut(son); // does it suppose to affect cuts field? if not, we can use the 2 methods that called in cut method
+            removeNodeFromList(son);
+            addNodeToTopList(son);
             son = position;
         }
         removeNodeFromList(min);
@@ -212,7 +214,7 @@ public class FibonacciHeap
     {
     	int[] arr = new int[100];
         HeapNode node = this.oldest_root;
-        while(node != this.newest_root){
+        while(node != null){
             arr[node.getRank()] += 1;
             node = node.getNext();
         }
@@ -298,7 +300,7 @@ public class FibonacciHeap
         x.setPrev(newest_root);
         x.setNext(null);
         newest_root = x;
-        trees++;
+        this.trees++;
     }
 
     protected void cut(HeapNode x){
@@ -347,7 +349,7 @@ public class FibonacciHeap
     */
     public int potential()
     {
-        return this.trees - (2 * this.marked);
+        return this.trees + (2 * this.marked);
     }
 
    /**
