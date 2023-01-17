@@ -213,7 +213,8 @@ public class FibonacciHeap
     	int[] arr = new int[100];
         HeapNode node = this.oldest_root;
         while(node != this.newest_root){
-            arr[node.rank] += 1;
+            arr[node.getRank()] += 1;
+            node = node.getNext();
         }
         return arr;
     }
