@@ -535,15 +535,10 @@ public class FibonacciHeap
             for (int i=0; i < k; i++) {
                 sum = sum + nChooseK(k,i);
                 if (sum >= k) {
-                    return i - 1;
+                    return i;
                 }
             }
             return rank - 1;
        }
-
-   }
-
-   public static void main(String[] args){
-
    }
 }

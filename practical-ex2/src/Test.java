@@ -13,7 +13,7 @@ public class Test {
     public static void main(String[] args) {
 
         grade = 80.0;
-        testScore = grade / 29;
+        testScore = grade / 30;
 
         try {test0();} catch (Exception e){bugFound("test0"); e.printStackTrace();}
         try {test1();} catch (Exception e){bugFound("test1"); e.printStackTrace();}
@@ -44,7 +44,7 @@ public class Test {
         try {test26();} catch (Exception e){bugFound("test26");e.printStackTrace();}
         try {test27();} catch (Exception e){bugFound("test27");e.printStackTrace();}
         try {test28();} catch (Exception e){bugFound("test28");e.printStackTrace();}
-
+        try {test29();} catch (Exception e){bugFound("test29");e.printStackTrace();}
         System.out.println(grade);
     }
 
@@ -822,6 +822,23 @@ public class Test {
                 FibonacciHeap.totalCuts() - totalCuts != 0 ||
                 FibonacciHeap.totalLinks() - links  < size - 100)
             bugFound(test);
+    }
+
+    static void test29() {
+        String test = "test29";
+        fibonacciHeap = new FibonacciHeap();
+
+        int size = 1025;
+
+        for (int i = size-1; i >= 0; i--) {
+            fibonacciHeap.insert(i);
+        }
+
+        fibonacciHeap.deleteMin();
+        int[] min10 = FibonacciHeap.kMin(fibonacciHeap, 10);
+        for(int i = 0; i < 10; i++){
+            System.out.println(min10[i]);
+        }
     }
 
     static void bugFound (String test) {
