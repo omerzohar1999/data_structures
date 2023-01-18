@@ -45,6 +45,7 @@ public class Test {
         try {test27();} catch (Exception e){bugFound("test27");e.printStackTrace();}
         try {test28();} catch (Exception e){bugFound("test28");e.printStackTrace();}
         try {test29();} catch (Exception e){bugFound("test29");e.printStackTrace();}
+        try {test30();} catch (Exception e){bugFound("test30");e.printStackTrace();}
         System.out.println(grade);
     }
 
@@ -841,7 +842,23 @@ public class Test {
         }
     }
 
-    static void bugFound (String test) {
+    static void test30() {
+        String test = "test30";
+        FibonacciHeap fibonacciHeap = new FibonacciHeap();
+
+        // MUST CREATE A FIBONACCI HEAP *WITH SINGLE TREE*
+
+        int[] arr = FibonacciHeap.kMin(fibonacciHeap,20);
+        for(int i=0; i < 20; i++) {
+            if(arr[i] != i) {
+                System.out.println("i is " + i + " but arr[i] is " + arr[i]);
+                bugFound(test);
+            }
+        }
+    }
+
+
+        static void bugFound (String test) {
         System.out.println("Bug found in " + test);
         grade -= testScore;
     }

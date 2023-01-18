@@ -13,6 +13,7 @@ public class FibonacciHeap
     int size;
     int marked;
     int trees;
+
     public FibonacciHeap(){
         this.size = 0;
         this.marked = 0;
@@ -22,6 +23,7 @@ public class FibonacciHeap
         newest_root = null;
 
     }
+
    /**
     * public boolean isEmpty()
     *
@@ -377,26 +379,15 @@ public class FibonacciHeap
     	return cuts;
     }
 
-    private void copyHeapRec(FibonacciHeap copy, HeapNode node, int depth) {
-        if (depth == 0) {
-            return;
-        }
-        while (node != null) {
-            copy.insert(node.getKey());
-            copyHeapRec(copy, node.getChild(), depth--);
-            node = node.getNext();
+    private void insertSons(HeapNode node){
+        HeapNode son = node.getChild(), internalNode;
+        while(son != null) {
+            internalNode = insert(son.getKey());
+            internalNode.setPointer(son);
+            son = son.getNext();
         }
     }
 
-    FibonacciHeap copyHeap(int maxLevel) {
-        FibonacciHeap copy = new FibonacciHeap();
-        copyHeapRec(copy, min, maxLevel);
-        return copy;
-    }
-
-    public FibonacciHeap copy() {
-        return copyHeap(min.getRank());
-    }
 
      /**
     * public static int[] kMin(FibonacciHeap H, int k)
@@ -408,19 +399,17 @@ public class FibonacciHeap
     */
     public static int[] kMin(FibonacciHeap H, int k)
     {
-        if (k >= H.size()) {
-            k = H.size();
-        }
-        HeapNode tree = H.min;
-        // determine number of levels
-        int maxLevelToCopy = tree.findMaxLevelToCopy(k);
-        // add top levels leaves to new Heap
-        FibonacciHeap minH = H.copyHeap(maxLevelToCopy);
-        // commit deleteMin k times into array
+        if (k >= H.size()) { k = H.size(); }
+        FibonacciHeap minH = new FibonacciHeap();
         int[] arr = new int[k];
-        for (int i=0; i < arr.length; i++) {
+        HeapNode tree = H.findMin(), node = tree;
+        minH.insert(node.getKey());
+        minH.findMin().setPointer(node);
+        for (int i=0; i < k; i++){
             arr[i] = minH.findMin().getKey();
+            minH.insertSons(node);
             minH.deleteMin();
+            node = minH.findMin().getPointer();
         }
         return arr;
     }
@@ -441,7 +430,9 @@ public class FibonacciHeap
         HeapNode next;
         HeapNode prev;
         HeapNode parent;
-    	public HeapNode(int key) {
+        HeapNode pointer;
+
+       public HeapNode(int key) {
     		this.key = key;
             this.rank = 0;
             this.mark = false;
@@ -490,6 +481,14 @@ public class FibonacciHeap
 
        public void setKey(int value){ this.key = value; }
 
+       HeapNode getPointer(){
+           return pointer;
+       }
+
+       void setPointer(HeapNode pointer) {
+           this.pointer = pointer;
+       }
+
        public void flipMark() {
            this.mark = !this.mark;
        }
@@ -508,37 +507,5 @@ public class FibonacciHeap
        public boolean hasNext() { return this.next != null; }
 
        public boolean hasPrev() { return this.prev != null; }
-
-       private static int nChooseK(int n, int k) {
-            int dif = n - k, nFactorial = 1, kFactorial = 1, difFactorial = 1;
-            for (int i=2; i <=n; i++) {
-                nFactorial = nFactorial * i;
-                if(i <= k) {
-                    kFactorial = kFactorial * i;
-                }
-                if(i <= dif) {
-                    difFactorial = difFactorial * i;
-                }
-            }
-            return nFactorial / (kFactorial * difFactorial);
-       }
-
-       /**
-        * @pre: this.isRoot()
-        * @post: $ret >=0 && $ret < height (== rank)
-        * @post: level > rank --> $ret = calculateSizeOfTopLevels(rank)
-        * @param k
-        * @return int sum == minimal depth that surely contains k node within  above
-        */
-       int findMaxLevelToCopy(int k) {
-           int sum = 0;
-            for (int i=0; i < k; i++) {
-                sum = sum + nChooseK(k,i);
-                if (sum >= k) {
-                    return i;
-                }
-            }
-            return rank - 1;
-       }
    }
 }
