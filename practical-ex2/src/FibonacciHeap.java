@@ -24,7 +24,6 @@ public class FibonacciHeap
 
     }
 
-    public int getMarked(){ return this.marked; }
 
     public HeapNode getFirst(){
         return this.newest_root;
@@ -154,11 +153,13 @@ public class FibonacciHeap
     void consolidate(){
         HeapNode[] nodesMapping = new HeapNode[(int) (Math.log(size) / Math.log(2)) + 1];
         HeapNode node = newest_root, position;
+        boolean flag;
         nodesMapping[node.getRank()] = node; // changed - added
         node = node.getNext(); // changed - added
         while (node != newest_root) { // changed
             // determines next position - changed - removed rows
             position = node.getNext();
+            flag = position == newest_root;
             // links two roots with the same rank, if needed
             int i = node.getRank();
             while (nodesMapping[i] != null) {
@@ -168,6 +169,7 @@ public class FibonacciHeap
             }
             // adds current root(linked or not) to the array & goes to next position
             nodesMapping[i] = node;
+            if(flag) { break; }
             node = position;
         }
     }
@@ -425,7 +427,7 @@ public class FibonacciHeap
 
      /**
     * public static int[] kMin(FibonacciHeap H, int k)
-    *
+    * @pre: trees == 1
     * This static function returns the k smallest elements in a Fibonacci heap that contains a single tree.
     * The function should run in O(k*deg(H)). (deg(H) is the degree of the only tree in H.)
     *
@@ -500,10 +502,6 @@ public class FibonacciHeap
            return mark;
        }
 
-       public boolean getMarked(){
-           return isMarked();
-       }
-
        public void setChild(HeapNode child) {
            this.child = child;
        }
@@ -531,8 +529,6 @@ public class FibonacciHeap
            this.mark = !this.mark;
        }
 
-       public void setMark(boolean val) { this.mark = val; }
-
        public void setRank(int val) { this.rank = val; }
 
        public boolean isLeaf(){
@@ -541,5 +537,8 @@ public class FibonacciHeap
        public boolean isRoot() {
            return this.getParent() == null;
        }
+
+       public boolean getMarked(){ return this.mark; }
+
    }
 }
