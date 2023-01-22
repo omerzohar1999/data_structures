@@ -87,12 +87,18 @@ public class FibonacciHeap
             return;
         }
         size --;
-        HeapNode son = min.getChild(), position;
+        HeapNode son = min.getChild(), position, firstSon = son;
         // "cut" all of min's children
         while (min.getChild() != null) { //changed
             position = son.getNext();
             removeNodeFromList(son);
-            addNodeToTopList(son);
+            if(min == newest_root)
+                newest_root = son;
+            son.setPrev(min.getPrev());
+            min.getPrev().setNext(son);
+            son.setNext(min);
+            min.setPrev(son);
+            trees += 1;
             son = position;
         }
         // remove min, consolidate & find new min
@@ -133,8 +139,13 @@ public class FibonacciHeap
         if (node1.getChild() != null) {
             node2.setNext(node1.getChild());
             node2.setPrev(node1.getChild().getPrev());
+            if(node1.getChild().getPrev() == node1.getChild()) {
+                node2.setNext(node1.getChild());
+                node1.getChild().setNext(node2);
+            }
+            else
+                node1.getChild().getPrev().setNext(node2);
             node1.getChild().setPrev(node2);
-            node1.getChild().getPrev().setNext(node2);
         }
         else {
             node2.setPrev(node2);
@@ -151,7 +162,7 @@ public class FibonacciHeap
     }
 
     void consolidate(){
-        HeapNode[] nodesMapping = new HeapNode[(int) (Math.log(size) / Math.log(2)) + 1];
+        HeapNode[] nodesMapping = new HeapNode[size+1];
         HeapNode node = newest_root, position;
         boolean flag;
         nodesMapping[node.getRank()] = node; // changed - added
@@ -172,6 +183,29 @@ public class FibonacciHeap
             if(flag) { break; }
             node = position;
         }
+        oldest_root = null;
+        newest_root = null;
+        HeapNode lastAdded = new HeapNode(0);
+        for(int i = 0; i<nodesMapping.length; i++)
+        {
+            if(nodesMapping[i] != null){
+                if(newest_root == null){
+                    newest_root = nodesMapping[i];
+                    newest_root.setNext(newest_root);
+                    newest_root.setPrev(newest_root);
+                    lastAdded = newest_root;
+                }
+                else{
+                    lastAdded.setNext(nodesMapping[i]);
+                    nodesMapping[i].setPrev(lastAdded);
+                    lastAdded = nodesMapping[i];
+                    lastAdded.setNext(newest_root);
+                    newest_root.setPrev(lastAdded);
+                }
+                oldest_root = lastAdded;
+            }
+        }
+
     }
 
    /**
@@ -196,9 +230,9 @@ public class FibonacciHeap
         if(!this.isEmpty() && !heap2.isEmpty()) {
             this.newest_root.setPrev(heap2.oldest_root);
             heap2.oldest_root.setNext(this.newest_root);
-            this.newest_root = heap2.newest_root;
-            this.newest_root.setPrev(null);
-            this.oldest_root.setNext(null);
+            heap2.newest_root.setPrev(this.oldest_root);
+            this.oldest_root.setNext(heap2.newest_root);
+            oldest_root = heap2.oldest_root;
             if(this.findMin().getKey() > heap2.findMin().getKey()){
                 this.min = heap2.findMin();
             }
@@ -314,8 +348,8 @@ public class FibonacciHeap
             }
         }
         // remove x from origin list
-            x.getNext().setPrev(x.getPrev()); // changed - do anyway
-            x.getPrev().setNext(x.getNext()); // changed - do anyway
+        x.getNext().setPrev(x.getPrev()); // changed - do anyway
+        x.getPrev().setNext(x.getNext()); // changed - do anyway
         // detach x
         x.setParent(null);
         x.setNext(x); // changed
@@ -435,6 +469,8 @@ public class FibonacciHeap
     */
     public static int[] kMin(FibonacciHeap H, int k)
     {
+        if(k==0)
+            return new int[0];
         if (k > H.size()) { k = H.size(); }
         FibonacciHeap minH = new FibonacciHeap();
         int[] arr = new int[k];
@@ -443,9 +479,12 @@ public class FibonacciHeap
         minH.findMin().setPointer(node);
         for (int i=0; i < k; i++){
             arr[i] = minH.findMin().getKey();
-            minH.insertSons(node);
+            if(node.getChild() != null)
+                minH.insertSons(node);
             minH.deleteMin();
-            node = minH.findMin().getPointer();
+            node = minH.findMin();
+            if(node != null)
+                node = node.getPointer();
         }
         return arr;
     }

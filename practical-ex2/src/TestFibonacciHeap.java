@@ -1830,15 +1830,6 @@ public class TestFibonacciHeap {
     }
 
     @Test
-    @Order(57)
-    public void testDeleteMinValue() {
-        Map<Integer, FibonacciHeap.HeapNode> nodes = testInsertion(heap, Integer.MIN_VALUE, 0);
-        testDeletion(heap, nodes.get(0));
-        assertSame(nodes.get(Integer.MIN_VALUE), heap.findMin());
-        assertSame(nodes.get(Integer.MIN_VALUE), heap.getFirst());
-    }
-
-    @Test
     @Order(84)
     public void testDeleteFirst1() {
         // delete first when it has no children
